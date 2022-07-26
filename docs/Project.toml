@@ -1,0 +1,3 @@
+[deps]
+DAQCore = "7b03aed3-9854-4651-ba28-76b88bef8818"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
