@@ -35,4 +35,8 @@ devname(dev::AbstractDevice) = dev.devname
 "Returns the type of device"
 devtype(dev::AbstractDevice) = string(typeof(dev))
 
+
+include("daq.jl")
+include("circbuffer.jl")
+
 end
