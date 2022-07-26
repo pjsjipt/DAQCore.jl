@@ -4,6 +4,9 @@ module DAQCore
 import DataStructures: OrderedDict
 
 
+export AbstractDevice, AbstractInputDev, AbstractOutputDev, AbstractPressureScanner
+export AbstractDaqConfig, AbstractDaqTask
+export devname, devtype
 "Abstract type to handle any kind of device"
 abstract type AbstractDevice end
 
@@ -30,13 +33,17 @@ The device name is a string that is used to refer to a specific device.
 
 This string is used when saving data and post processing.
 """
+function devname end
+
 devname(dev::AbstractDevice) = dev.devname
 
 "Returns the type of device"
+function devtype end
 devtype(dev::AbstractDevice) = string(typeof(dev))
 
-
+include("utils.jl")
 include("daq.jl")
 include("circbuffer.jl")
+include("measdata.jl")
 
 end
