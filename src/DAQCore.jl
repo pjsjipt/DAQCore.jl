@@ -1,5 +1,38 @@
 module DAQCore
 
-# Write your package code here.
+
+import DataStructures: OrderedDict
+
+
+"Abstract type to handle any kind of device"
+abstract type AbstractDevice end
+
+"Abstract type to handle data acquisition (input) devices"
+abstract type AbstractInputDev <: AbstractDevice end
+
+"Abstract type to handle actuators, that is, output devices"
+abstract type AbstractOutputDev <: AbstractDevice end
+
+"Base type for device configuration"
+abstract type AbstractDaqConfig end
+
+"Base type for data acquisition task"
+abstract type AbstractDaqTask end
+
+"Abstract type to handle pressure scanners"
+abstract type AbstractPressureScanner <: AbstractInputDev end
+
+
+"""
+`devname(dev::AbstractDevice)`
+
+The device name is a string that is used to refer to a specific device.
+
+This string is used when saving data and post processing.
+"""
+devname(dev::AbstractDevice) = dev.devname
+
+"Returns the type of device"
+devtype(dev::AbstractDevice) = string(typeof(dev))
 
 end
