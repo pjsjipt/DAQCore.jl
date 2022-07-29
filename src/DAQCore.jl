@@ -45,5 +45,9 @@ include("utils.jl")
 include("daq.jl")
 include("circbuffer.jl")
 include("measdata.jl")
+include("config.jl")
+include("channels.jl")
+include("deviceset.jl")
+include("daqtask.jl")
 
 end
