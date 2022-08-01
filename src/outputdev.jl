@@ -17,12 +17,12 @@ Return the names of each individual axis on an output device.
 function axesnames end
 
 """
-`moveto(move, x)`
+`moveto!(move, x)`
 
 Move to an arbitrary point. The point is specified by vector `x`. 
 
 """
-function moveto end
+function moveto! end
 
 function devposition end
 
