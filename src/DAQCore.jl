@@ -50,5 +50,6 @@ include("channels.jl")
 include("deviceset.jl")
 include("daqtask.jl")
 include("points.jl")
+include("outputdev.jl")
 
 end
