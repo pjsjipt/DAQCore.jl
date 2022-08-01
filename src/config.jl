@@ -66,7 +66,7 @@ sparam!(dconf::DaqConfig, param, val::Union{AbstractString,Symbol,Char}) =
 import Base.setindex!
 
 setindex!(dconf::DaqConfig, val::Integer, param) = iparam!(dconf, string(param), val)
-setindex!(dconf::DaqConfig, val::AbstractFLoat, param) = sparam!(dconf, Float64(param), val)
+setindex!(dconf::DaqConfig, val::AbstractFloat, param) = sparam!(dconf, Float64(param), val)
 setindex!(dconf::DaqConfig, val::Union{AbstractString,Symbol,Char}, param) =
     sparam!(dconf, string(param), val)
 

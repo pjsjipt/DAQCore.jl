@@ -2,7 +2,7 @@
 
 export DeviceSet, MeasDataSet
 
-mutable struct DeviceSet{DevList} <: AbstractDAQ
+mutable struct DeviceSet{DevList} <: AbstractInputDev
     "Device name associated to this `DeviceSet`"
     devname::String
     "Index of most relevant measurement device"
