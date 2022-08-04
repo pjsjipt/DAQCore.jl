@@ -11,10 +11,8 @@ mutable struct ExperimentSetup{Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev,TR
     points::Pts
     "Output devices to set points"
     odev::ODev
-    "Coordinate transformation"
-    transf::TRF
     "Mapping from points parameters to axes names"
-    pamap::OrderedDict{String,String}
+    axmap::OrderedDict{String,String}
 end
 
 
@@ -32,22 +30,30 @@ function ExperimentSetup(pts::AbstractDaqPoints, odev::AbstractOutputDev)
             error("Parameter $p is different from axis $a! The axes and parameters should be the same and in the same order. A map might help!")
         end
     end
-    pamap = OrderedDict{String,String}()
+    axmap = OrderedDict{String,String}()
     for p in params
-        pamap[p] = p
+        axmap[p] = p
     end
-
-    transf = p -> p # Just an identity transformation
-    
-    ExperimentSetup(0, pts, odev, transf, pamap)
+    ExperimentSetup(0, pts, odev, axmap)
 end
 
 function ExperimentSetup(pts::AbstractDaqPoints, odev::AmstractOutputDev,
-                         pamap::OrderedDict{String,String},transf=p->p)
+                         axmap::OrderedDict{String,String})
     params = parameters(pts)
     axes = axesnames(odev)
 
-    
+    # Check if axes and params are compatible with axmap
+    for (p,a) in axmap
+        if p ∉ params
+            error("Parameter $p not in parameter list!")
+        end
+        if a ∉ axes
+            error("Axis $a not in axes list!")
+        end
+    end
+
+    return ExperimentSetup(0, pts, odev, axmap)
+        
 end
 
 """
