@@ -5,5 +5,5 @@ using Test
 
     include("test_circbuffer.jl")
     include("test_config.jl")
-
+    include("test_channels.jl")
 end

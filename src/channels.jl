@@ -1,6 +1,6 @@
 
 import DataStructures: OrderedDict
-export AbstractDaqChannels, DaqChannels
+export AbstractDaqChannels, DaqChannels, numchannels, daqchannels, physchans
 
 abstract type AbstractDaqChannels end
 
@@ -45,50 +45,37 @@ nice reference. These channel definitions are stored for reading and writing pur
  * `nchans`: Number of channels
 
 """
-function DaqChannels(devname, devtype, channels::AbstractVector)
+function DaqChannels(devname, devtype, channels::AbstractVector, physchans="")
     nch = length(channels)
     
     chans = string.(channels)
 
     chanmap = OrderedDict{String,Int}()
 
-    for (i,v) in chans
-        chanmap[v] = i
-    end
-
-    return DaqChannels(devname, devtype, channels, chans, chanmap)
-end
-
-function DaqChannels(devname, devtype, ch::Union{Symbol,Char,AbstractString},
-                     nchans::Integer)
-    nd = floor(Int,log10(nchans)) + 1
-    chans = string(ch) .* numstring.(1:nchans,nd)
-
-    return DaqChannels(devname, devtype, chans)
-end
-
-
-                     
-function DaqChannels(devname, devtype, physchans, channels::AbstractVector)
-    nch = length(channels)
-    
-    chans = string.(channels)
-
-    chanmap = OrderedDict{String,Int}()
-
-    for (i,v) in chans
+    for (i,v) in enumerate(chans)
         chanmap[v] = i
     end
 
     return DaqChannels(devname, devtype, physchans, chans, chanmap)
 end
+import Base.*
+function DaqChannels(devname, devtype, ch::Union{Symbol,Char,AbstractString},
+                     nchans::Integer, physchans="")
+    nd = numdigits(nchans) 
+    chans = [string(ch, s) for s in numstring.(1:nchans, nd)]
+    return DaqChannels(devname, devtype, chans, physchans)
+end
 
+
+                     
 
 devname(ch::DaqChannels) = ch.devname
 devtype(ch::DaqChannels) = ch.devtype
 
 numchannels(ch::DaqChannels) = length(ch.channels)
 daqchannels(ch::DaqChannels) = ch.channels
+
+physchans(ch::DaqChannels) = ch.physchans
 
 import Base.getindex
 getindex(ch::DaqChannels, s::AbstractString) = ch.chanmap[s]
