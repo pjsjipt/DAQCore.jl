@@ -99,7 +99,7 @@ Remove the element at the back.
     @boundscheck (cb.length == 0) && throw(ArgumentError("array must be non-empty"))
     i = _buffer_index(cb, cb.length)
     cb.length -= 1
-    return @inbounds view(cb.buffer, :, i)
+    return @inbounds cb.buffer[:, i]
 end
 
 """
@@ -143,7 +143,7 @@ function Base.popfirst!(cb::CircMatBuffer)
     i = cb.first
     cb.first = (cb.first + 1 > cb.capacity ? 1 : cb.first + 1)
     cb.length -= 1
-    return @inbounds view(cb.buffer, :, i)
+    return @inbounds cb.buffer[:, i]
 end
 
 """
@@ -158,7 +158,7 @@ function Base.pushfirst!(cb::CircMatBuffer, data)
     if length(cb) < cb.capacity
         cb.length += 1
     end
-    @inbounds cb.buffer[:,i] .= data
+    @inbounds cb.buffer[:,cb.first] .= data
     return cb
 end
 
@@ -266,21 +266,35 @@ Resize CircMatBuffer to the maximum capacity of n elements.
 If n is smaller than the current buffer length, the first n elements will be retained.
 """
 function Base.resize!(cb::CircMatBuffer, n::Integer)
-    if n != capacity(cb) || size(cb.buffer, 1) == 0
-        w = bufwidth(cb)
-        buf_new = Matrix{eltype(cb)}(undef, w, n)
-        cb.capacity = n
+
+    if n == capacity(cb)
+        return cb
+    else
+        # Allocate memory and copy old data:
+        buf_new = Matrix{eltype(cb)}(undef, cb.width, n)
+        ll = length(cb)
+        if ll > n
+            ll = n
+        end
+        
+        for i in 1:ll
+            buf_new[:,i] .= cb[i]
+        end
         cb.first = 1
-        cb.length = 0
+        cb.capacity = n
+        cb.length = ll
         cb.buffer = buf_new
     end
+
     return cb
 end
 
 function Base.resize!(cb::CircMatBuffer, w::Integer, n::Integer)
 
     if w == bufwidth(cb)
-        return resize!(cb, n)
+        resize!(cb, n)
+        cb.first = 1
+        cb.length = 0
     else
         cb.capacity = n
         cb.width = w

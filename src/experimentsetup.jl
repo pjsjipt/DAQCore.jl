@@ -4,15 +4,17 @@
 abstract type AbstractExperimentSetup end
 
 
-mutable struct ExperimentSetup{Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev,TRF} <: AbstractExperimentPoints
+mutable struct ExperimentSetup{Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentPoints
     "Index of last point measured"
     lastpoint::Int
     "Coordinates of points to be measured"
     points::Pts
     "Output devices to set points"
     odev::ODev
-    "Mapping from points parameters to axes names"
+    "Mapping from parameters to axes names"
     axmap::OrderedDict{String,String}
+    "Mapping from axes names to parameters"
+    parmap::OrderedDict{String,String}
 end
 
 
@@ -31,17 +33,19 @@ function ExperimentSetup(pts::AbstractDaqPoints, odev::AbstractOutputDev)
         end
     end
     axmap = OrderedDict{String,String}()
+    parmap = OrderedDict{String,String}()
     for p in params
         axmap[p] = p
+        parmap[p] = p
     end
-    ExperimentSetup(0, pts, odev, axmap)
+    ExperimentSetup(0, pts, odev, axmap, parmap)
 end
 
 function ExperimentSetup(pts::AbstractDaqPoints, odev::AmstractOutputDev,
                          axmap::OrderedDict{String,String})
     params = parameters(pts)
     axes = axesnames(odev)
-
+    
     # Check if axes and params are compatible with axmap
     for (p,a) in axmap
         if p ∉ params
@@ -52,10 +56,19 @@ function ExperimentSetup(pts::AbstractDaqPoints, odev::AmstractOutputDev,
         end
     end
 
-    return ExperimentSetup(0, pts, odev, axmap)
-        
+    # Setup the parameter map
+    parmap = OrderedDict{String,String}()
+    for (p,a) in axmap
+        parmap[a] = p
+    end
+    
+    return ExperimentSetup(0, pts, odev, axmap, parmap)
 end
 
+
+numpoints(expdevs::ExperimentSetup) = numpoints(expdevs.points)
+parameters(expdevs::ExperimentSetup) = parameters(expdevs.points)
+axesnames(expdevs::ExperimentSetup) = axesnames(expdevs.odev)
 """
 `finishedpoints(pts)`
 
@@ -103,10 +116,14 @@ function movenext!(pts::ExperimentSetup)
     finishedpoints(pts) && return false  # It is over.
     
     lp = lastpoint(pts)
-    p = daqpoint(pts.points, lp+1) # Get the coordinates of last point
+    p = daqpoint(pts, lp+1) # Get the coordinates of last point
     a = pts.transf(p)  # Transform to axes
     moveto!(pts.odev, a)
     incpoint!(pts.points)
     return true # We moved, so we have not finished
+
     
 end
+
+
+    

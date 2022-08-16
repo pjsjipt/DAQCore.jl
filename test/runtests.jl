@@ -2,5 +2,7 @@ using DAQCore
 using Test
 
 @testset "DAQCore.jl" begin
-    # Write your tests here.
+
+    include("test_circbuffer.jl")
+    
 end
