@@ -53,4 +53,6 @@ include("points.jl")
 include("outputdev.jl")
 include("experimentsetup.jl")
 include("outputdevset.jl")
+include("testdaqdev.jl")
+
 end

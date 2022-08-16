@@ -33,29 +33,6 @@ function MeasData(devname, devtype, time, rate, data::AbstractMatrix{T},
     nch = size(data, 1)
     nd = floor(Int, log10(nch)) + 1
     
-    chans = OrderedDict{String,Int}()
-    if isnothing(channels)
-        for i in 1:nch
-            s = "C" * numstring(i, nd)
-            chans[s] = i
-        end
-    elseif isa(channels, AbstractString) || isa(channels, Symbol)
-        c = string(channels)
-        for i in 1:nch
-            chans[c * numstring(i,nd)] = i
-        end
-    elseif isa(channels, AbstractVector)
-        if length(channels) != nch
-            error("Length of parameters `channels` should be the same as the number of rows o data measurement matrix!")
-        end
-        
-        for (i,v) in enumerate(channels)
-            chans[string(v)] = i
-        end
-    else
-        error("Can not handle $(typeof(channels)) for `channels` parameter")
-    end
-    
     if isnothing(units)
         uns = fill("", nch)
     elseif isa(units, AbstractString) || isa(units, Symbol)
@@ -68,7 +45,7 @@ function MeasData(devname, devtype, time, rate, data::AbstractMatrix{T},
     else
         error("Can not handle $(typeof(units)) for `units` parameter")
     end
-    MeasData{T,typeof(data)}(devname, devtype, time, rate, data, chans, uns)
+    MeasData{T,typeof(data)}(devname, devtype, time, rate, data, channels, uns)
 end
 
 
