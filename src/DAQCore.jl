@@ -51,5 +51,6 @@ include("deviceset.jl")
 include("daqtask.jl")
 include("points.jl")
 include("outputdev.jl")
-
+include("experimentsetup.jl")
+include("outputdevset.jl")
 end

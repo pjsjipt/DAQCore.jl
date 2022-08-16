@@ -6,4 +6,6 @@ using Test
     include("test_circbuffer.jl")
     include("test_config.jl")
     include("test_channels.jl")
+    include("test_points.jl")
+    
 end

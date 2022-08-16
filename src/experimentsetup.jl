@@ -4,7 +4,7 @@
 abstract type AbstractExperimentSetup end
 
 
-mutable struct ExperimentSetup{Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentPoints
+mutable struct ExperimentSetup{Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentSetup
     "Index of last point measured"
     lastpoint::Int
     "Coordinates of points to be measured"
@@ -41,7 +41,7 @@ function ExperimentSetup(pts::AbstractDaqPoints, odev::AbstractOutputDev)
     ExperimentSetup(0, pts, odev, axmap, parmap)
 end
 
-function ExperimentSetup(pts::AbstractDaqPoints, odev::AmstractOutputDev,
+function ExperimentSetup(pts::AbstractDaqPoints, odev::AbstractOutputDev,
                          axmap::OrderedDict{String,String})
     params = parameters(pts)
     axes = axesnames(odev)
@@ -94,7 +94,7 @@ lastpoint(pts::AbstractExperimentSetup) = pts.lastpoint
 
 Increment point counter.
 """
-incpoint!(pts::AbstractExperimentPoints) = pts.lastpoint += 1
+incpoint!(pts::AbstractExperimentSetup) = pts.lastpoint += 1
 
 """
 `setpoint!(pts, i)`

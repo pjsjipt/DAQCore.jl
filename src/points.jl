@@ -81,7 +81,7 @@ end
 
 Returns the names of the parameters.
 """
-paremeters(pts::AbstractDaqPoints) = pts.params
+parameters(pts::AbstractDaqPoints) = pts.params
 
 "Number of parameters in an `DaqPoints"
 numparams(M::DaqPoints) = length(M.params)
@@ -180,7 +180,6 @@ function CartesianDaqPoints(;kw...)
         push!(axes, [Float64(x) for x in v])
     end
     pts = cartesianprod(axes)
-    return pts
     return CartesianDaqPoints(params, axes, pts)
 end
 
@@ -301,13 +300,13 @@ DaqPoints(0, ["z"], [1.0; 2.0; 3.0; 4.0;;])
 julia> M = M1*M2
 DaqPoints(0, ["x", "y", "z"], [1.0 100.0 1.0; 1.0 100.0 2.0; … ; 3.0 300.0 3.0; 3.0 300.0 4.0])
 
-julia> numaxes(M1)
+julia> numparams(M1)
 2
 
-julia> numaxes(M2)
+julia> numparams(M2)
 1
 
-julia> numaxes(M)
+julia> numparams(M)
 3
 ```
 """
