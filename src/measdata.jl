@@ -1,6 +1,6 @@
 
 using Dates
-export MeasData
+export MeasData, meastime, measdata, samplingrate
 
 "Base type for measurement data sets"
 abstract type AbstractMeasData end
@@ -12,7 +12,7 @@ abstract type AbstractMeasData end
 Structure to store data acquired from a DAQ device. It also stores metadata related to 
 the DAQ device, data acquisition process and daq channels.
 """
-mutable struct MeasData{T,AT} <: AbstractMeasData
+mutable struct MeasData{T,AT,CH} <: AbstractMeasData
     "Device that generated the data"
     devname::String
     "Type of device"
@@ -23,49 +23,36 @@ mutable struct MeasData{T,AT} <: AbstractMeasData
     rate::Float64
     "Data acquired"
     data::AT
-    channels::OrderedDict{String,Int}
+    "Channel Information"
+    chans::CH
     "Units"
     units::Vector{String}
 end
 
-function MeasData(devname, devtype, time, rate, data::AbstractMatrix{T},
-                  channels, units) where {T}
+function MeasData(devname, devtype, time, rate,
+                  data::AbstractMatrix{T}, chans::CH,
+                  units::Vector{String}) where {T,CH<:AbstractDaqChannels}
+    
     nch = size(data, 1)
-    nd = floor(Int, log10(nch)) + 1
+
+    (nch == numchannels(chans) == length(units)) ||
+        error("Incompatible dimensions between data, channels and units!")
     
-    if isnothing(units)
-        uns = fill("", nch)
-    elseif isa(units, AbstractString) || isa(units, Symbol)
-        uns = fill(string(units), nch)
-    elseif isa(units, AbstractVector)
-        if length(units) != nch
-            error("Length of parameters `channels` should be the same as the number of rows o data measurement matrix!")
-        end
-        uns = string.(units)
-    else
-        error("Can not handle $(typeof(units)) for `units` parameter")
-    end
-    MeasData{T,typeof(data)}(devname, devtype, time, rate, data, channels, uns)
+    MeasData{T,typeof(data),CH}(devname, devtype, time, rate,
+                                data, channels, units)
 end
 
+MeasData(devname, devtype, time, rate, data::AbstractMatrix{T}, channels::CH,
+         units::AbstractString)where {T,CH<:AbstractDaqChannels} =
+             MeasData(devname, devtype, time, rate,
+                      data, channels, fill(string(units), size(data,1)))
 
-function MeasData(devname::String, devtype::String, time::DateTime,
-                  rate::Float64, data::AbstractMatrix{T},
-                  channels::OrderedDict{String,Int},
-                  units::Vector{String}) where {T}
-    if !(size(data,1) == length(channels) == length(units))
-        error("Incompatible `data`, `channels` and `units`!")
-    end
-    return MeasData{T}(devname, devtype, time, rate, data, channels, units)
-end
+MeasData(devname, devtype, time, rate, data::AbstractMatrix{T},
+         channels::CH) where {T,CH<:AbstractDaqChannels} =
+             MeasData(devname, devtype, time, rate,
+                      data, channels, fill("", size(data,1)))
 
 
-function MeasData(devname, devtype, data::AbstractMatrix{T};
-                  time=now(), rate=1.0, channels="C", units="") where {T}
-    return MeasData{T}(devname, devtype, time, rate, data, channels, units)
-end
-
-    
 #MeasData(devname, devtype, time, rate, data, chan
 #DateTime(Dates.UTInstant(Millisecond(d.t)))
 "Convert a DateTime object to ms"
@@ -87,14 +74,14 @@ samplingrate(d::MeasData) = d.rate
 
 "Access to the data acquired"
 measdata(d::MeasData) = d.data
-daqchannels(d::MeasData) = collect(keys(d.chans))
+daqchannels(d::MeasData) = daqchannels(d.chans)
     
 import Base.getindex
 
 getindex(d::MeasData, idx...) = view(d.data, idx...)
 
 "Access the data in channel name `ch`"
-getindex(d::MeasData,ch::AbstractString) = view(d.data,d.channels[ch],:)
+getindex(d::MeasData,ch::AbstractString) = view(d.data,d.chans[ch],:)
 
 "Access the data in channel index `i`"
 getindex(d::MeasData, i::Integer)  = view(d.data, i, :)
