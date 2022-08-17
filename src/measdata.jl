@@ -12,37 +12,39 @@ abstract type AbstractMeasData end
 Structure to store data acquired from a DAQ device. It also stores metadata related to 
 the DAQ device, data acquisition process and daq channels.
 """
-mutable struct MeasData{T,AT,CH} <: AbstractMeasData
+mutable struct MeasData{A,AT,S<:AbstractDaqSampling,
+                        CH<:AbstractDaqChannels} <: AbstractMeasData
     "Device that generated the data"
     devname::String
     "Type of device"
     devtype::String
-    "Time of data aquisition"
-    time::DateTime
-    "Sampling rate (Hz)"
-    rate::Float64
+    "Sampling timing data"
+    sampling::S
     "Data acquired"
     data::AT
     "Channel Information"
     chans::CH
 end
 
-function MeasData(devname, devtype, time, rate,
-                  data::AbstractMatrix{T}, chans::CH) where {T,CH<:AbstractDaqChannels}
+function MeasData(devname, devtype, sampling::S,
+                  data::AbstractMatrix{T},
+                  chans::CH) where {T,S<:AbstractDaqSampling,
+                                    CH<:AbstractDaqChannels}
+    
     nch = size(data, 1)
     
     nch == numchannels(chans) ||
         error("Incompatible dimensions between data, channels and units!")
+
+    numsamples(sampling) == size(data,2) ||
+        error("Number of samples in sampling different from the number of lines of data array")
     
-    MeasData{T,typeof(data),CH}(devname, devtype, time, rate,
-                                data, channels)
+    MeasData{T,typeof(data),S,CH}(devname, devtype, sampling, data, chans)
 end
 
 
 
 
-#MeasData(devname, devtype, time, rate, data, chan
-#DateTime(Dates.UTInstant(Millisecond(d.t)))
 
 "Device name that acquired the data"
 devname(d::MeasData) = d.devname
@@ -54,7 +56,11 @@ devtype(d::MeasData) = d.devtype
 meastime(d::AbstractMeasData) = d.time
 
 "What was the sampling rate of the data acquisition?"
-samplingrate(d::MeasData) = d.rate
+samplingrate(d::MeasData) = samplingrate(d.sampling)
+samplingtimes(d::MeasData) = samplingtimes(d.sampling)
+samplinghours(d::MeasData) = samplinghours(d.sampling)
+samplingperiod(d::MeasData) = samplingperiod(d.sampling)
+daqtime(d::MeasData) = daqtime(d.sampling)
 
 "Access to the data acquired"
 measdata(d::MeasData) = d.data
