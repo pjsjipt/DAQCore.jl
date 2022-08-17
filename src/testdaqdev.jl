@@ -177,8 +177,8 @@ function daqread(dev::TestDaq)
     wait(dev.tsk)
     dev.task.timing = (dev.task.timing[1], time_ns(), dev.nsamples)
     dev.task.isreading = false
-    return MeasData(devname(dev), devtype(dev), dev.task.time, dev.rate, dev.E,
-                    dev.chans.chanmap, nothing)
+    return MeasData(devname(dev), devtype(dev), dev.task.time,
+                    dev.rate, dev.E, dev.chans)
 end
 
 

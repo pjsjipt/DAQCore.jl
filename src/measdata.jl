@@ -25,40 +25,24 @@ mutable struct MeasData{T,AT,CH} <: AbstractMeasData
     data::AT
     "Channel Information"
     chans::CH
-    "Units"
-    units::Vector{String}
 end
 
 function MeasData(devname, devtype, time, rate,
-                  data::AbstractMatrix{T}, chans::CH,
-                  units::Vector{String}) where {T,CH<:AbstractDaqChannels}
-    
+                  data::AbstractMatrix{T}, chans::CH) where {T,CH<:AbstractDaqChannels}
     nch = size(data, 1)
-
-    (nch == numchannels(chans) == length(units)) ||
+    
+    nch == numchannels(chans) ||
         error("Incompatible dimensions between data, channels and units!")
     
     MeasData{T,typeof(data),CH}(devname, devtype, time, rate,
-                                data, channels, units)
+                                data, channels)
 end
 
-MeasData(devname, devtype, time, rate, data::AbstractMatrix{T}, channels::CH,
-         units::AbstractString)where {T,CH<:AbstractDaqChannels} =
-             MeasData(devname, devtype, time, rate,
-                      data, channels, fill(string(units), size(data,1)))
 
-MeasData(devname, devtype, time, rate, data::AbstractMatrix{T},
-         channels::CH) where {T,CH<:AbstractDaqChannels} =
-             MeasData(devname, devtype, time, rate,
-                      data, channels, fill("", size(data,1)))
 
 
 #MeasData(devname, devtype, time, rate, data, chan
 #DateTime(Dates.UTInstant(Millisecond(d.t)))
-"Convert a DateTime object to ms"
-time2ms(t::DateTime) = t.instant.periods.value
-"Convert a time in ms to DateTimeObject"
-ms2time(ms::Int64) = DateTime(Dates.UTInstant{Millisecond}(Millisecond(ms)))
 
 "Device name that acquired the data"
 devname(d::MeasData) = d.devname
@@ -75,7 +59,9 @@ samplingrate(d::MeasData) = d.rate
 "Access to the data acquired"
 measdata(d::MeasData) = d.data
 daqchannels(d::MeasData) = daqchannels(d.chans)
-    
+numchannels(d::MeasData) = numchannels(d.chans)
+
+
 import Base.getindex
 
 getindex(d::MeasData, idx...) = view(d.data, idx...)

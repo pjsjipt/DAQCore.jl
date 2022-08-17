@@ -4,7 +4,7 @@ export AbstractDaqChannels, DaqChannels, numchannels, daqchannels, physchans
 
 abstract type AbstractDaqChannels end
 
-mutable struct DaqChannels{C} <: AbstractDaqChannels
+mutable struct DaqChannels{C,U} <: AbstractDaqChannels
     "Device name that contains the channels"
     devname::String
     "Type of device containing the channels"
@@ -15,6 +15,8 @@ mutable struct DaqChannels{C} <: AbstractDaqChannels
     channels::Vector{String}
     "Mapping of channel names to index"
     chanmap::OrderedDict{String,Int}
+    "Units of measurements"
+    units::U
 end
 """
 `DaqChannels(devname, devtype, channels::AbstractVector)`
@@ -45,7 +47,8 @@ nice reference. These channel definitions are stored for reading and writing pur
  * `nchans`: Number of channels
 
 """
-function DaqChannels(devname, devtype, channels::AbstractVector, physchans="")
+function DaqChannels(devname, devtype, channels::AbstractVector,
+                     units="", physchans="")
     nch = length(channels)
     
     chans = string.(channels)
@@ -56,14 +59,14 @@ function DaqChannels(devname, devtype, channels::AbstractVector, physchans="")
         chanmap[v] = i
     end
 
-    return DaqChannels(devname, devtype, physchans, chans, chanmap)
+    return DaqChannels(devname, devtype, physchans, chans, chanmap, units)
 end
 import Base.*
 function DaqChannels(devname, devtype, ch::Union{Symbol,Char,AbstractString},
-                     nchans::Integer, physchans="")
+                     nchans::Integer, units="", physchans="")
     nd = numdigits(nchans) 
     chans = [string(ch, s) for s in numstring.(1:nchans, nd)]
-    return DaqChannels(devname, devtype, chans, physchans)
+    return DaqChannels(devname, devtype, chans, units, physchans)
 end
 
 

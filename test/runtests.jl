@@ -7,5 +7,5 @@ using Test
     include("test_config.jl")
     include("test_channels.jl")
     include("test_points.jl")
-    
+    include("test_sampling.jl")
 end
