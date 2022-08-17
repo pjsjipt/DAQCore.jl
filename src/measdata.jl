@@ -1,6 +1,6 @@
 
 using Dates
-export MeasData, meastime, measdata, samplingrate
+export MeasData, measdata, samplingrate
 
 "Base type for measurement data sets"
 abstract type AbstractMeasData end
@@ -12,7 +12,7 @@ abstract type AbstractMeasData end
 Structure to store data acquired from a DAQ device. It also stores metadata related to 
 the DAQ device, data acquisition process and daq channels.
 """
-mutable struct MeasData{A,AT,S<:AbstractDaqSampling,
+mutable struct MeasData{T,AT,S<:AbstractDaqSampling,
                         CH<:AbstractDaqChannels} <: AbstractMeasData
     "Device that generated the data"
     devname::String
@@ -43,6 +43,8 @@ function MeasData(devname, devtype, sampling::S,
 end
 
 
+numsamples(d::MeasData{T,AT,S,CH}) where {T,AT<:AbstractMatrix{T},S,CH} =
+    size(d.data,2)
 
 
 
@@ -53,7 +55,7 @@ devname(d::MeasData) = d.devname
 devtype(d::MeasData) = d.devtype
 
 "When did the data acquisition take place?"
-meastime(d::AbstractMeasData) = d.time
+daqtime(d::AbstractMeasData) = daqtime(d.sampling)
 
 "What was the sampling rate of the data acquisition?"
 samplingrate(d::MeasData) = samplingrate(d.sampling)
@@ -67,8 +69,9 @@ measdata(d::MeasData) = d.data
 daqchannels(d::MeasData) = daqchannels(d.chans)
 numchannels(d::MeasData) = numchannels(d.chans)
 
-
 import Base.getindex
+
+getindex(d::MeasData, i::Integer, k::Integer) = d.data[i,k]
 
 getindex(d::MeasData, idx...) = view(d.data, idx...)
 
@@ -80,14 +83,14 @@ getindex(d::MeasData, i::Integer)  = view(d.data, i, :)
 
 "Access the data in channel name `ch` at time index `k`"
 getindex(d::MeasData, ch::AbstractString,k::Integer) =
-    d.data[d.channels[ch],k]
+    d.data[d.chans[ch],k]
 
 function getindex(d::MeasData, chans::AbstractVector{<:AbstractString})
-    view(d.data, [d.channels[ch] for ch in chans], :)
+    view(d.data, [d.chans[ch] for ch in chans], :)
 end
 
 function getindex(d::MeasData, chans::AbstractVector{<:AbstractString}, k)
-    view(d.data, [d.channels[ch] for ch in chans], k)
+    view(d.data, [d.chans[ch] for ch in chans], k)
 end
 
 function getindex(d::MeasData, chans::AbstractVector{<:Integer})
