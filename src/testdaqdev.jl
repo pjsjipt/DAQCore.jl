@@ -187,6 +187,7 @@ function daqstart(dev::TestDaq)
     dev.task.isreading = true
     dev.task.time = now()
     t =  @async sleep(Δt) 
+    filldata!(dev)
     dev.task.timing = (tinit, tinit+1_000_000_000, 1)
     dev.task.task = t
     return t
@@ -213,7 +214,7 @@ end
 isreading(dev::TestDaq) = dev.task.isreading
 samplesread(dev::TestDaq) =
     min(iparam(dev.conf,"nsamples"),
-        round(Int, (time_ns()-dev.timing[1])*1e-9 *
+        round(Int, (time_ns()-dev.task.timing[1])*1e-9 *
             fparam(dev.conf, "rate")))
 
 isdaqfinished(dev::TestDaq) = !isreading(dev)
