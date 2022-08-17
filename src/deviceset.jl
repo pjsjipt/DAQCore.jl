@@ -97,7 +97,7 @@ devtype(d::MeasDataSet) = d.devtype
 Return the [`DateTime`](@ref) when the device started to acquire the data from 
 a [`DeviceSet`](@ref).
 """
-meastime(d::MeasDataSet) = d.time
+daqtime(d::MeasDataSet) = d.time
 
 """
 `d["some/path/to/measurements"]`
@@ -217,62 +217,5 @@ isdaqfinished(devs::DeviceSet) = isdaqfinished(dev.devices[devs.iref])
 issamplesavailable(devs::DeviceSet)=issamplesavailable(devs.devices[devs.iref])
 
 
-"""
-`savedaqdata(h5, devs::DeviceSet, data)`
 
-Save the acquired data to a path inside a HDF5 file. It will save the data of each of the 
-devices.
-"""    
-function savedaqdata(h5, devs::DeviceSet{T}, data; kw...) where {T}
-    g = create_group(h5, devname(devs))
-    attributes(g)["devtype"] = "DeviceSet"
-    attributes(g)["devices"] = collect(keys(data))
-    attributes(g)["time"] = time2ms(devs.time)
-    for (k,v) in kw
-        attributes(g)[string(k)] = v
-    end
-
-    for (k,v) in data
-        savedaqdata(g, v)
-    end
-end
-
-
-"""
-`savedaqdata(h5, devs::DeviceSet, data)`
-
-Save the acquired data to a path inside a HDF5 file. It will save the data of each of the 
-devices.
-"""    
-function savedaqdata(h5, data::MeasDataSet; kw...) where {T}
-    g = create_group(h5, data.devname)
-    attributes(g)["devname"] = data.devname
-    attributes(g)["devtype"] = "DeviceSet"
-    attributes(g)["devices"] = collect(keys(data.data))
-    attributes(g)["time"] = time2ms(data.time)
-    for (k,v) in kw
-        attributes(g)[string(k)] = v
-    end
-
-    for (k,v) in data.data
-        savedaqdata(g, v)
-    end
-end
-
-"""
-`savedaqconfig(h5, devs::DeviceSet)`
-
-Saves the configuration of a `DeviceSet`. This configuration corresponds to the 
-configuration of each devince in `devs::DeviceSet`.
-"""
-function savedaqconfig(h5, devs::DeviceSet)
-
-    ndevs = length(devs.devices)
-    g = create_group(h5, devname(devs))
-    for dev in devs.devices
-        savedaqconfig(g, dev)
-    end
-end
-
-                        
         
