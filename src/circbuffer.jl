@@ -1,3 +1,5 @@
+export CircMatBuffer, empty!, bufwidth, nextbuffer, capacity
+export isfull, flatten, flatten!
 
 
 mutable struct CircMatBuffer{T} <: AbstractVector{T}

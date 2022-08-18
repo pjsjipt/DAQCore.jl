@@ -99,4 +99,9 @@ end
 
 getindex(d::MeasData) = d.data
 
-                
+
+import Base.size
+
+size(d::MeasData) = size(d.data)
+size(d::MeasData, idx) = size(d.data, idx)
+
