@@ -82,13 +82,67 @@ fparam(dconf::DaqConfig, param) = dconf.fparams[param]
 "Retrieve other configuration parameters types"
 oparam(dconf::DaqConfig, param) = dconf.oparams[param]
 
-iparam!(dconf::DaqConfig, param, val::Integer) =
+
+
+iparam!(dconf::DaqConfig, param::AbstractString, val) =
     dconf.iparams[string(param)] = Int64(val)
-fparam!(dconf::DaqConfig, param, val::AbstractFloat) =
+function iparam!(dconf::DaqConfig, plst...)
+    for (k,v) in plst
+        dconf.iparams[string(k)] = Int64(v)
+    end
+end
+
+
+                 
+fparam!(dconf::DaqConfig, param::AbstractString, val) = 
     dconf.fparams[string(param)] = Float64(val)
-sparam!(dconf::DaqConfig, param, val::Union{AbstractString,Symbol,Char}) =
+
+function fparam!(dconf::DaqConfig, plst...)
+    for (k,v) in plst
+        dconf.fparams[string(k)] = Float64(v)
+    end
+end
+
+sparam!(dconf::DaqConfig, param::AbstractString, val) =
     dconf.sparams[string(param)] = string(val)
-oparam!(dconf::DaqConfig, param, val::Any) = dconf.oparams[param] = val
+
+function sparam!(dconf::DaqConfig, plst...)
+    for (k,v) in plst
+        dconf.sparams[string(k)] = string(v)
+    end
+end
+
+oparam!(dconf::DaqConfig, param::AbstractString, val::Any) = dconf.oparams[param] = val
+
+function oparam!(dconf::DaqConfig, plst...)
+    for (k,v) in plst
+        dconf.oparams[string(k)] = v
+    end
+end
+
+
+# Lets extend this to any device. If it has a conf field, it can be used
+iparam(dev::AbstractDevice, param) = iparam(dev.conf, param)
+fparam(dev::AbstractDevice, param) = fparam(dev.conf, param)
+sparam(dev::AbstractDevice, param) = sparam(dev.conf, param)
+oparam(dev::AbstractDevice, param) = oparam(dev.conf, param)
+
+iparam!(dev::AbstractDevice, param::AbstractString, val) =
+    iparam!(dev.conf, param, val)
+
+fparam!(dev::AbstractDevice, param::AbstractString, val) =
+    fparam!(dev.conf, param, val)
+
+sparam!(dev::AbstractDevice, param::AbstractString, val) =
+    sparam!(dev.conf, param, val)
+
+oparam!(dev::AbstractDevice, param::AbstractString, val) =
+    oparam!(dev.conf, param, val)
+
+iparam!(dev::AbstractDevice, plst...) = iparam!(dev.conf, plst...)
+fparam!(dev::AbstractDevice, plst...) = fparam!(dev.conf, plst...)
+sparam!(dev::AbstractDevice, plst...) = sparam!(dev.conf, plst...)
+oparam!(dev::AbstractDevice, plst...) = oparam!(dev.conf, plst...)
 
 import Base.setindex!
 
