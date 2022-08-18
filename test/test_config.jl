@@ -1,17 +1,17 @@
 # Testing the DaqConfig stuff
 
 let
-    c = DaqConfig("devname", "devtype"; ip="localhost", port=22, model="model", sernum="1234",
+    c = DaqConfig("devname", "devtype"; ip="localhost", port=22, model="model", sn="1234",
                   tag="TAG", a=0.0, b=1, c="PARAM", d=[1 2; 3 4])
     
     @test devname(c) == "devname"
     @test devtype(c) == "devtype"
     
-    @test devip(c) == "localhost"
-    @test devport(c) == 22
-    @test devmodel(c) == "model"
-    @test devserial(c) == "1234"
-    @test devtag(c) == "TAG"
+    @test daqdevip(c) == "localhost"
+    @test daqdevport(c) == 22
+    @test daqdevmodel(c) == "model"
+    @test daqdevserial(c) == "1234"
+    @test daqdevtag(c) == "TAG"
     
     
     @test iparam(c, "b") == 1

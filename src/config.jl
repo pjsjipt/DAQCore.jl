@@ -3,7 +3,7 @@
 import DataStructures: OrderedDict
 export AbstractDaqConfig, DaqConfig
 export iparam, iparam!, fparam, fparam!, sparam, sparam!, oparam, oparam!
-export devip, devport, devmodel, devserial, devtag
+export daqdevip, daqdevport, daqdevmodel, daqdevserial, daqdevtag
 
 abstract type AbstractDaqConfig end
 
@@ -19,7 +19,7 @@ mutable struct DaqConfig <: AbstractDaqConfig
     "Model of the device"
     model::String
     "Serial number of the device"
-    sernum::String
+    sn::String
     "Storage tag of the device"
     tag::String
     "Integer configuration parameters of the device"
@@ -34,13 +34,19 @@ end
 
 devname(c::DaqConfig) = c.devname
 devtype(c::DaqConfig) = c.devtype
-devip(c::DaqConfig) = c.ip
-devport(c::DaqConfig) = c.port
-devmodel(c::DaqConfig) = c.model
-devserial(c::DaqConfig) = c.sernum
-devtag(c::DaqConfig) = c.tag
+"Retrieve device IP address"
+daqdevip(dconf::DaqConfig) = dconf.ip
+"Retrieve device model"
+daqdevport(dconf::DaqConfig) = dconf.port
+"Retrieve device model"
+daqdevmodel(dconf::DaqConfig) = dconf.model
+"Retrieve device serial number"
+daqdevserial(dconf::DaqConfig) = dconf.sn
+"Retrieve device tag"
+daqdevtag(dconf::DaqConfig) = dconf.tag
 
-function DaqConfig(devname, devtype; ip="", port=0, model="", sernum="", tag="", kw...)
+
+function DaqConfig(devname, devtype; ip="", port=0, model="", sn="", tag="", kw...)
 
     fparams = OrderedDict{String,Float64}()
     iparams = OrderedDict{String,Int64}()
@@ -60,7 +66,7 @@ function DaqConfig(devname, devtype; ip="", port=0, model="", sernum="", tag="",
         end
     end
 
-    return DaqConfig(devname, devtype, ip, port, model, sernum, tag,
+    return DaqConfig(devname, devtype, ip, port, model, sn, tag,
                      iparams, fparams, sparams, oparams)
            
             
