@@ -35,6 +35,10 @@ daqtime(r::DaqSamplingRate) = r.time
 "Return the number of samples acquired"
 numsamples(r::DaqSamplingRate) = r.nsamples
 
+Base.length(r::DaqSamplingRate) = r.nsamples
+
+Base.getindex(r::DaqSamplingRate, i) = (i .- 1) ./ r.rate
+
 "Return the sampling rate"
 samplingrate(r::DaqSamplingRate) = r.rate
 
@@ -44,8 +48,8 @@ samplingtimes(r::DaqSamplingRate) = range(0.0, length=r.nsamples,
 "Return the hour when each sampling occurred"
 function samplinghours(r::DaqSamplingRate)
     t1 = r.time
-    dt = Millisecond(1000/r.rate)
-    return range(t1, length=r.nsamples, step=dt)
+    dt = Nanosecond(round(Int,1e9/r.rate)) # Nanosecond for accuracy...
+    return t1 .+ (1:r.nsamples) * dt   #range(t1, length=r.nsamples, step=dt)
 end
 
 samplingperiod(r::DaqSamplingRate) = (r.nsamples-1)/r.rate
@@ -70,6 +74,9 @@ end
 daqtime(r::DaqSamplingTimes) = r.t[begin]
 numsamples(r::DaqSamplingTimes) = length(r.t)
 
+Base.length(r::DaqSamplingTimes) = length(r.t)
+Base.getindex(r::DaqSamplingTimes, i) = r.t[i]
+
 function samplingrate(r::DaqSamplingTimes)
     # The best we can do is an average sampling rate!
     dt = r.t[end] - r.t[begin] # Sampling interval
@@ -88,6 +95,7 @@ end
 
 samplingperiod(r::DaqSamplingTimes) = Nanosecond(r.t[end]-r.t[begin]) / 1e9
 
+# This might depend on accuracy
 DaqSamplingTimes(r::DaqSamplingRate) = DaqSamplingTimes(samplinghours(r))
 
      
