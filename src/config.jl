@@ -3,7 +3,6 @@
 import DataStructures: OrderedDict
 export AbstractDaqConfig, DaqConfig
 export iparam, iparam!, fparam, fparam!, sparam, sparam!, oparam, oparam!
-export daqdevip, daqdevport, daqdevmodel, daqdevserial, daqdevtag
 
 abstract type AbstractDaqConfig end
 
@@ -12,16 +11,6 @@ mutable struct DaqConfig <: AbstractDaqConfig
     devname::String
     "Device type"
     devtype::String
-    "IP address of the computer where the device is located"
-    ip::String
-    "Port number of device"
-    port::Int
-    "Model of the device"
-    model::String
-    "Serial number of the device"
-    sn::String
-    "Storage tag of the device"
-    tag::String
     "Integer configuration parameters of the device"
     iparams::OrderedDict{String,Int64}
     "Floating point configuration parameters of the device"
@@ -34,31 +23,9 @@ end
 
 devname(c::DaqConfig) = c.devname
 devtype(c::DaqConfig) = c.devtype
-"Retrieve device IP address"
-daqdevip(dconf::DaqConfig) = dconf.ip
-"Retrieve device model"
-daqdevport(dconf::DaqConfig) = dconf.port
-"Retrieve device model"
-daqdevmodel(dconf::DaqConfig) = dconf.model
-"Retrieve device serial number"
-daqdevserial(dconf::DaqConfig) = dconf.sn
-"Retrieve device tag"
-daqdevtag(dconf::DaqConfig) = dconf.tag
 
 
-"Retrieve device IP address"
-daqdevip(dev::AbstractDevice) = dev.conf.ip
-"Retrieve device model"
-daqdevport(dev::AbstractDevice) = dev.conf.port
-"Retrieve device model"
-daqdevmodel(dev::AbstractDevice) = dev.conf.model
-"Retrieve device serial number"
-daqdevserial(dev::AbstractDevice) = dev.conf.sn
-"Retrieve device tag"
-daqdevtag(dev::AbstractDevice) = dev.conf.tag
-
-
-function DaqConfig(devname, devtype; ip="", port=0, model="", sn="", tag="", kw...)
+function DaqConfig(devname, devtype; kw...)
 
     fparams = OrderedDict{String,Float64}()
     iparams = OrderedDict{String,Int64}()
@@ -78,16 +45,14 @@ function DaqConfig(devname, devtype; ip="", port=0, model="", sn="", tag="", kw.
         end
     end
 
-    return DaqConfig(devname, devtype, ip, port, model, sn, tag,
-                     iparams, fparams, sparams, oparams)
+    return DaqConfig(devname, devtype, iparams, fparams, sparams, oparams)
            
             
 end
 
 function Base.copy(c::DaqConfig)
     # Let's start by copying all parameters from conf
-    c1 = DaqConfig(c.devname, c.devtype; ip=c.ip, port=c.port, model=c.model,
-                 sn=c.sn, tag=c.tag)
+    c1 = DaqConfig(c.devname, c.devtype)
     c1.iparams = copy(c.iparams)
     c1.fparams = copy(c.fparams)
     c1.sparams = copy(c.sparams)

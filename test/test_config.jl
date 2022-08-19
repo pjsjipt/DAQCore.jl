@@ -1,17 +1,17 @@
 # Testing the DaqConfig stuff
 
 let
-    c = DaqConfig("devname", "devtype"; ip="localhost", port=22, model="model", sn="1234",
-                  tag="TAG", a=0.0, b=1, c="PARAM", d=[1 2; 3 4])
+    c = DaqConfig("devname", "devtype"; ip="localhost", port=22, model="model",
+                  sn="1234", tag="TAG", a=0.0, b=1, c="PARAM", d=[1 2; 3 4])
     
     @test devname(c) == "devname"
     @test devtype(c) == "devtype"
     
-    @test daqdevip(c) == "localhost"
-    @test daqdevport(c) == 22
-    @test daqdevmodel(c) == "model"
-    @test daqdevserial(c) == "1234"
-    @test daqdevtag(c) == "TAG"
+    @test sparam(c, "ip") == "localhost"
+    @test iparam(c, "port") == 22
+    @test sparam(c, "model") == "model"
+    @test sparam(c, "sn") == "1234"
+    @test sparam(c, "tag") == "TAG"
     
     
     @test iparam(c, "b") == 1
@@ -75,11 +75,6 @@ let
     c1 = copy(c)
     @test devname(c) == devname(c1)
     @test devtype(c) == devtype(c1)
-    @test daqdevip(c) == daqdevip(c1)
-    @test daqdevport(c) == daqdevport(c1)
-    @test daqdevmodel(c) == daqdevmodel(c1)
-    @test daqdevserial(c) == daqdevserial(c1)
-    @test daqdevtag(c) == daqdevtag(c1)
 
     for (k,v) in c.iparams
         @test iparam(c1, k) == v
