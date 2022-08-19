@@ -5,7 +5,7 @@
 
 export daqaddinput, daqacquire, daqstart, daqread, daqstop, daqreference
 export daqconfig, daqconfigdev, daqzero, samplesread, isreading, issamplesavailable
-export numchannels, daqchannels, daqpeek
+export numchannels, daqchannels, daqpeek, daqunits
 
 """
 `daqaddinput(dev, ...)`
@@ -135,3 +135,11 @@ Useful to view data while acquisition is going on.
 """
 function daqpeek end
 
+
+"""
+`daqunits(dev, params...)`
+
+Specify data acquisition units. The specific format of the parameters
+will depend on device implementation.
+"""
+function daqunits end

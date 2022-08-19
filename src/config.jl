@@ -46,6 +46,18 @@ daqdevserial(dconf::DaqConfig) = dconf.sn
 daqdevtag(dconf::DaqConfig) = dconf.tag
 
 
+"Retrieve device IP address"
+daqdevip(dev::AbstractDevice) = dev.conf.ip
+"Retrieve device model"
+daqdevport(dev::AbstractDevice) = dev.conf.port
+"Retrieve device model"
+daqdevmodel(dev::AbstractDevice) = dev.conf.model
+"Retrieve device serial number"
+daqdevserial(dev::AbstractDevice) = dev.conf.sn
+"Retrieve device tag"
+daqdevtag(dev::AbstractDevice) = dev.conf.tag
+
+
 function DaqConfig(devname, devtype; ip="", port=0, model="", sn="", tag="", kw...)
 
     fparams = OrderedDict{String,Float64}()
@@ -72,6 +84,17 @@ function DaqConfig(devname, devtype; ip="", port=0, model="", sn="", tag="", kw.
             
 end
 
+function Base.copy(c::DaqConfig)
+    # Let's start by copying all parameters from conf
+    c1 = DaqConfig(c.devname, c.devtype; ip=c.ip, port=c.port, model=c.model,
+                 sn=c.sn, tag=c.tag)
+    c1.iparams = copy(c.iparams)
+    c1.fparams = copy(c.fparams)
+    c1.sparams = copy(c.sparams)
+    c1.oparams = deepcopy(c.oparams)
+    return c1
+    
+end
 
 "Retrieve integer configuration parameter"
 iparam(dconf::DaqConfig, param) = dconf.iparams[param]

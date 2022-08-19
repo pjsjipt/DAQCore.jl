@@ -70,6 +70,37 @@ let
     oparam!(c, "X"=>1//2, "Y"=>2//3)
     @test oparam(c, "X") == 1//2
     @test oparam(c, "Y") == 2//3
+
+    oparam!(c, "MAT"=>[1 2; 3 4])
+    c1 = copy(c)
+    @test devname(c) == devname(c1)
+    @test devtype(c) == devtype(c1)
+    @test daqdevip(c) == daqdevip(c1)
+    @test daqdevport(c) == daqdevport(c1)
+    @test daqdevmodel(c) == daqdevmodel(c1)
+    @test daqdevserial(c) == daqdevserial(c1)
+    @test daqdevtag(c) == daqdevtag(c1)
+
+    for (k,v) in c.iparams
+        @test iparam(c1, k) == v
+    end
+
+    for (k,v) in c.fparams
+        @test fparam(c1, k) == v
+    end
+
+    for (k,v) in c.sparams
+        @test sparam(c1, k) == v
+    end
+
+    for (k,v) in c.oparams
+        @test oparam(c1, k) == v
+    end
+
+    # Testing the deepcopy
+    oparam(c1, "MAT")[1,1] = 999
+    @test oparam(c, "MAT")[1,1] == 1
+    
     
     
     # Let's test the methods for AbstractDevices
@@ -109,6 +140,8 @@ let
     oparam!(dev, "Z"=>1//3, "W"=>[1 2; 3 4])
     @test oparam(dev, "Z") == 1//3
     @test oparam(dev, "W") == [1 2; 3 4]
+
+
     
 
 end
