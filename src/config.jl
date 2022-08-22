@@ -3,6 +3,7 @@
 import DataStructures: OrderedDict
 export AbstractDaqConfig, DaqConfig
 export iparam, iparam!, fparam, fparam!, sparam, sparam!, oparam, oparam!
+export ihaskey, fhaskey, shaskey, ohaskey
 
 abstract type AbstractDaqConfig end
 
@@ -70,6 +71,14 @@ fparam(dconf::DaqConfig, param) = dconf.fparams[param]
 "Retrieve other configuration parameters types"
 oparam(dconf::DaqConfig, param) = dconf.oparams[param]
 
+"Do integer parameters have key `param`?"
+ihaskey(c::DaqConfig, param) = haskey(c.iparams, param)
+"Do float parameters have key `param`?"
+fhaskey(c::DaqConfig, param) = haskey(c.fparams, param)
+"Do string parameters have key `param`?"
+shaskey(c::DaqConfig, param) = haskey(c.sparams, param)
+"Do `Any` parameters have key `param`?"
+ohaskey(c::DaqConfig, param) = haskey(c.oparams, param)
 
 
 iparam!(dconf::DaqConfig, param::AbstractString, val) =
@@ -114,6 +123,11 @@ iparam(dev::AbstractDevice, param) = iparam(dev.conf, param)
 fparam(dev::AbstractDevice, param) = fparam(dev.conf, param)
 sparam(dev::AbstractDevice, param) = sparam(dev.conf, param)
 oparam(dev::AbstractDevice, param) = oparam(dev.conf, param)
+
+ihaskey(dev::AbstractDevice, param) = ihaskey(dev.conf, param)
+fhaskey(dev::AbstractDevice, param) = fhaskey(dev.conf, param)
+shaskey(dev::AbstractDevice, param) = shaskey(dev.conf, param)
+ohaskey(dev::AbstractDevice, param) = ohaskey(dev.conf, param)
 
 iparam!(dev::AbstractDevice, param::AbstractString, val) =
     iparam!(dev.conf, param, val)
