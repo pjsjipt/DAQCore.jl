@@ -49,7 +49,7 @@ samplingtimes(r::DaqSamplingRate) = range(0.0, length=r.nsamples,
 function samplinghours(r::DaqSamplingRate)
     t1 = r.time
     dt = Nanosecond(round(Int,1e9/r.rate)) # Nanosecond for accuracy...
-    return t1 .+ (1:r.nsamples) * dt   #range(t1, length=r.nsamples, step=dt)
+    return t1 .+ (0:r.nsamples-1) * dt   #range(t1, length=r.nsamples, step=dt)
 end
 
 samplingperiod(r::DaqSamplingRate) = (r.nsamples-1)/r.rate
