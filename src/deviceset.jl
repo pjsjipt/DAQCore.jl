@@ -68,13 +68,13 @@ struct MeasDataSet{MeasSet} <: AbstractMeasData
     devdict::OrderedDict{String,Int}
 end
 
-function MeasDataSet(devname, devtype, time, datasets)
+function MeasDataSet(dname, devtype, time, datasets)
 
     devdict = OrderedDict{String,Int}()
     for (i,d) in enumerate(datasets)
         devdict[devname(d)] = i
     end
-    return MeasDataSet(devname, devtype, time, datasets, devdict)
+    return MeasDataSet(dname, devtype, time, datasets, devdict)
 end
 
 """
