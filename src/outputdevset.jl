@@ -1,4 +1,4 @@
-
+export OutputDevSet
 
 mutable struct OutputDevSet{ODev} <: AbstractOutputDev
     devname::String
@@ -11,16 +11,16 @@ devtype(dev::OutputDevSet) = "OutputDevSet"
 
 
 function OutputDevSet(dname, odevs::ODev) where {ODev}
-    devmap = OrderedDict{String,Int}
+    devmap = OrderedDict{String,Int}()
     
     for (i,dev) in enumerate(odevs)
         devmap[devname(dev)] = i
     end
     
-    OutputDevSet(dname, odev, devname)
+    OutputDevSet(dname, odevs, devmap)
 end
 
-OutputDevSet(dname, odevs...) where {ODev} = OutputDevSet(dname, odevs)
+#OutputDevSet(dname, odevs...) where {ODev} = OutputDevSet(dname, odevs)
 
 import Base.getindex
 getindex(dev::OutputDevSet, i) = dev.odev[i]

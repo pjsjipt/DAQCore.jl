@@ -1,5 +1,17 @@
 # Generic interface for output devices
 
+export OutputDev, numaxes, axesnames, moveto!, devposition, stopoutputdev
+export waituntildone
+
+struct OutputDev <: AbstractOutputDev
+    devname::String
+    devtype::String
+    axes::Vector{String}
+    config::DaqConfig
+end
+
+devname(dev::OutputDev) = dev.devname
+devtype(dev::OutputDev) = dev.devtype
 
 """
 `numaxes(dev)`
@@ -43,3 +55,5 @@ function waituntildone end
 
 
 
+numaxes(dev::OutputDev) = length(dev.axes)
+axesnames(dev::OutputDev) = dev.axes
