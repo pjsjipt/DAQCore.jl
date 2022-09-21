@@ -31,7 +31,7 @@ let
     xx = 1:3
     yy = 101:102
     zz = 1001:1002
-    pts = CartesianDaqPoints(x=xx, y=yy, z=zz)
+    pts = DaqCartesianPoints(x=xx, y=yy, z=zz)
     
     @test numpoints(pts) == 3*2*2
     @test numparams(pts) == 3

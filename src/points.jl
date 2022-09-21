@@ -1,6 +1,6 @@
 # Data structures to help define experimental points
 
-export AbstractDaqPoints, DaqPoints, CartesianDaqPoints, DaqPointsProduct
+export AbstractDaqPoints, DaqPoints, DaqCartesianPoints, DaqPointsProduct
 export parameters, numpoints, numparams, daqpoint, daqpoints
 abstract type AbstractDaqPoints end
 
@@ -97,7 +97,7 @@ numpoints(pts::DaqPoints) = size(pts.pts,1)
 daqpoint(pts::DaqPoints, i) = pts.pts[i, :]
 daqpoints(pts::DaqPoints) = pts.pts
 
-mutable struct CartesianDaqPoints <: AbstractDaqPoints
+mutable struct DaqCartesianPoints <: AbstractDaqPoints
     params::Vector{String}
     axes::Vector{Vector{Float64}}
     pts::Matrix{Float64}
@@ -143,7 +143,7 @@ end
 cartesianprod(x1...) = cartesianprod([collect(y) for y in x1])
 
 """
-`CartesianDaqPoints(;kw...)`
+`DaqCartesianPoints(;kw...)`
 
 Creates a test matrix that is a cartesian product  of independent parameters.
 This is useful if the test should be executed on a regular grid, x, y for example.
@@ -172,7 +172,7 @@ The points of the test matrix are
 
 
 """
-function CartesianDaqPoints(;kw...)
+function DaqCartesianPoints(;kw...)
     params = string.(collect(keys(kw)))
     axes = Vector{Float64}[]
     npars = length(params)
@@ -180,13 +180,13 @@ function CartesianDaqPoints(;kw...)
         push!(axes, [Float64(x) for x in v])
     end
     pts = cartesianprod(axes)
-    return CartesianDaqPoints(params, axes, pts)
+    return DaqCartesianPoints(params, axes, pts)
 end
 
-numpoints(pts::CartesianDaqPoints) = size(pts.pts, 1)
-numparams(pts::CartesianDaqPoints) = length(pts.params)
-daqpoint(pts::CartesianDaqPoints, i) = pts.pts[i,:]
-daqpoints(pts::CartesianDaqPoints) = pts.pts
+numpoints(pts::DaqCartesianPoints) = size(pts.pts, 1)
+numparams(pts::DaqCartesianPoints) = length(pts.params)
+daqpoint(pts::DaqCartesianPoints, i) = pts.pts[i,:]
+daqpoints(pts::DaqCartesianPoints) = pts.pts
 
 
     
