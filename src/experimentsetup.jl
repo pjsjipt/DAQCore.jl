@@ -1,12 +1,16 @@
 
 # Setup experimental points
 
+export ExperimentSetup, lastpoint, incpoint!, setpoint!, movenext!
+export finishedpoints
 abstract type AbstractExperimentSetup end
 
 
-mutable struct ExperimentSetup{Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentSetup
+mutable struct ExperimentSetup{IDev<:AbstractInputDev,Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentSetup
     "Index of last point measured"
     lastpoint::Int
+    "Data Input Devices"
+    idev::IDev
     "Coordinates of points to be measured"
     points::Pts
     "Output devices to set points"
@@ -15,64 +19,97 @@ mutable struct ExperimentSetup{Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <
     axmap::OrderedDict{String,String}
     "Mapping from axes names to parameters"
     parmap::OrderedDict{String,String}
+    "Index of each parameter corresponding to the ith axis"
+    idx::Vector{Int}
 end
 
 
-function ExperimentSetup(pts::AbstractDaqPoints, odev::AbstractOutputDev)
-    params = parameters(pts)
-    axes = axesnames(odev)
 
-    if length(params) != length(axes)
-        error("Number of parameters is different from number of axes!")
-    end
 
-    for (i,p) in enumerate(params)
-        a = axes[i]
-        if p != a
-            error("Parameter $p is different from axis $a! The axes and parameters should be the same and in the same order. A map might help!")
-        end
-    end
+function setup_ap_map(axes, params, axmap1)
+    p1 = unique(params)
+    a1 = unique(axes)
+
+    length(p1) != length(params) &&  error("Repeated parameters. Don't know how to handle this!")
+    length(a1) != length(axes) &&  error("Repeated axes. Don't know how to handle this!")
+
+    length(params) != length(axes) && error("The number of axes should be the same as the number of parameters!")
+
     axmap = OrderedDict{String,String}()
-    parmap = OrderedDict{String,String}()
-    for p in params
-        axmap[p] = p
-        parmap[p] = p
+    pamap = OrderedDict{String,String}()
+
+    
+    # Every axe should be associated to a parameter.
+    # We map axes to parameters. The order is given by axes.
+    # We do this because this determines the order of acting
+    # on the output devices.
+    for a in axes
+        if a ∉ keys(axmap1)
+            error("Axis $a not mapped to a parameter")
+        end
+        p = axmap1[a]
+        if p ∉ values(axmap1)
+            error("Parameter $p not mapped to an axis!")
+        end
+        
+        p = axmap1[a]
+        axmap[a] = p
+        pamap[p] = a
     end
-    ExperimentSetup(0, pts, odev, axmap, parmap)
+    param_idx = Dict{String,Int}()
+    for (i,p) in enumerate(params)
+        param_idx[p] = i
+    end
+
+    idx = zeros(Int,length(params))
+    for (i,a) in enumerate(axes)
+        p = axmap[a]
+        k = param_idx[p]
+        idx[i] = k
+    end
+    
+    return axmap, pamap, idx
+        
 end
 
-function ExperimentSetup(pts::AbstractDaqPoints, odev::AbstractOutputDev,
-                         axmap::OrderedDict{String,String})
+function setup_ap_map(axes, params)
+    np = length(params)
+    np != length(axes) && error("Incompatible length between parameters and axes!")
+
+    axmap = OrderedDict{String,String}()
+    for (a,p) in zip(axes, params)
+        axmap[a] = p
+    end
+
+    return setup_ap_map(axes, params, axmap)
+end
+
+
+
+function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
+                         odev::AbstractOutputDev, axmap::AbstractDict{String,String})
+
+    
     params = parameters(pts)
     axes = axesnames(odev)
     
-    # Check if axes and params are compatible with axmap
-    for (p,a) in axmap
-        if p ∉ params
-            error("Parameter $p not in parameter list!")
-        end
-        if a ∉ axes
-            error("Axis $a not in axes list!")
-        end
-    end
-
-    # Setup the parameter map
-    parmap = OrderedDict{String,String}()
-    for (p,a) in axmap
-        parmap[a] = p
-    end
-    
-    return ExperimentSetup(0, pts, odev, axmap, parmap)
+    # Check compatibility and setup axes map
+    axmap1, parmap, idx = setup_ap_map(axes, params, axmap)
+    return ExperimentSetup(0, idev, pts, odev, axmap1, parmap, idx)
 end
 
 
 numpoints(expdevs::ExperimentSetup) = numpoints(expdevs.points)
-parameters(expdevs::ExperimentSetup) = parameters(expdevs.points)
-axesnames(expdevs::ExperimentSetup) = axesnames(expdevs.odev)
+parameters(expdevs::ExperimentSetup) = collect(keys(expdevs.parmap))
+axesnames(expdevs::ExperimentSetup) = collect(keys(expdevs.axmap))
+numaxes(expdevs::ExperimentSetup) = length(expdevs.axmap)
+numparams(expdevs::ExperimentSetup) = length(expdevs.axmap)
+
+
 """
 `finishedpoints(pts)`
 
-Check if the experiment is done! For `ExperimentPoints`, we should just check
+Check if the experiment is done! For `ExperimentSetup`, we should just check
 whether the index of the lastpoint corresponds to the number of points.
 
 It is possible, in some applications, to have a dynamic behavior so that a priori
@@ -116,8 +153,8 @@ function movenext!(pts::ExperimentSetup)
     finishedpoints(pts) && return false  # It is over.
     
     lp = lastpoint(pts)
-    p = daqpoint(pts, lp+1) # Get the coordinates of last point
-    a = pts.transf(p)  # Transform to axes
+    p = daqpoint(pts.points, lp+1) # Get the coordinates of last point
+    pax = p[pts.idx]
     moveto!(pts.odev, a)
     incpoint!(pts.points)
     return true # We moved, so we have not finished
@@ -125,5 +162,6 @@ function movenext!(pts::ExperimentSetup)
     
 end
 
-
     
+daqpoints(pts::ExperimentSetup) = daqpoints(pts.points)
+daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.points, i)

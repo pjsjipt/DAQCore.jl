@@ -39,7 +39,7 @@ function move(dev::TestOutputDev, ax::Integer, mm; r=false)
         dev.x[ax] = mm
     end
     #sleep(dev.Δt)
-    println("Position: $ax -> $(dev.axes[ax]) = $(dev.x[ax])")
+    #println("Position: $ax -> $(dev.axes[ax]) = $(dev.x[ax])")
 end
 
 move(dev::TestOutputDev, ax, mm; r=false) =

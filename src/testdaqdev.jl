@@ -81,10 +81,10 @@ function daqaddinput(dev::TestDaq, chans::Vector{String}, signal::Vector{TestSig
     
 end
 
-function daqddinput(dev::TestDaq, chans::Vector{String};
+function daqaddinput(dev::TestDaq, chans::Vector{String};
                     amp=1.0, freq=10.0, offset=1.0)
     nch = length(chans)
-    phase = range(0.0, 2π, length(nch+1))[1:end-1]
+    phase = range(0.0, 2π, length=nch+1)[1:end-1]
     signals = [TestSignal(amp, freq, ϕ, offset) for ϕ in phase]
     daqaddinput(dev, chans, signals)
 end
