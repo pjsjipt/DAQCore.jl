@@ -2,7 +2,7 @@
 # Each input device can implement other functionality but the
 # the DAQJulia uses this interface to do data acquisition.
 
-
+export InputDev
 export daqaddinput, daqacquire, daqstart, daqread, daqstop, daqreference
 export daqconfig, daqconfigdev, daqzero, samplesread, isreading, issamplesavailable
 export numchannels, daqchannels, daqpeek, daqunits

@@ -9,8 +9,6 @@ mutable struct DeviceSet{DevList} <: AbstractInputDev
     iref::Int
     "List of devices"
     devices::DevList
-    "Starting time of data acquisition"
-    time::DateTime
     "Map from device name to device index in `devices`."
     devdict::OrderedDict{String,Int}
 end
@@ -27,7 +25,7 @@ The argument `iref` corresponds to the reference device (if it exists).
 This reference device is simply the device that is used when checking if data acquisition 
 is ongoing or how many samples have been read.
 """
-function DeviceSet(devname, devices::DevList, iref=1) where {DevList}
+function DeviceSet(dname, devices::DevList, iref=1) where {DevList}
 
     devdict = OrderedDict{String,Int}()
     ndev = length(devices)
@@ -35,7 +33,7 @@ function DeviceSet(devname, devices::DevList, iref=1) where {DevList}
         devdict[devname(dev)] = i
     end
     
-    return DeviceSet(devname, iref, devices, now(), devdict)
+    return DeviceSet(dname, iref, devices, devdict)
 end
 
 
@@ -47,7 +45,7 @@ import Base.getindex
 Return the `i`-th device of a device set
 """
 getindex(dev::DeviceSet, i) = dev.devices[i]
-getindex(devset::DeviceSet, dname::AbstractString) = dev.devices[dev.devdict[dname]]
+getindex(dev::DeviceSet, dname::AbstractString) = dev.devices[dev.devdict[dname]]
 
 
 """
