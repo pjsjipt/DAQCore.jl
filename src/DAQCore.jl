@@ -55,5 +55,6 @@ include("outputdev.jl")
 include("experimentsetup.jl")
 include("outputdevset.jl")
 include("testdaqdev.jl")
+include("testoutputdev.jl")
 
 end
