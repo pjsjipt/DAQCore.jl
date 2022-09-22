@@ -8,10 +8,6 @@ export ihaskey, fhaskey, shaskey, ohaskey
 abstract type AbstractDaqConfig end
 
 mutable struct DaqConfig <: AbstractDaqConfig
-    "Device name"
-    devname::String
-    "Device type"
-    devtype::String
     "Integer configuration parameters of the device"
     iparams::OrderedDict{String,Int64}
     "Floating point configuration parameters of the device"
@@ -22,11 +18,8 @@ mutable struct DaqConfig <: AbstractDaqConfig
     oparams::OrderedDict{String,Any}
 end
 
-devname(c::DaqConfig) = c.devname
-devtype(c::DaqConfig) = c.devtype
 
-
-function DaqConfig(devname, devtype; kw...)
+function DaqConfig(; kw...)
 
     fparams = OrderedDict{String,Float64}()
     iparams = OrderedDict{String,Int64}()
@@ -46,19 +39,18 @@ function DaqConfig(devname, devtype; kw...)
         end
     end
 
-    return DaqConfig(devname, devtype, iparams, fparams, sparams, oparams)
+    return DaqConfig(iparams, fparams, sparams, oparams)
            
             
 end
 
 function Base.copy(c::DaqConfig)
     # Let's start by copying all parameters from conf
-    c1 = DaqConfig(c.devname, c.devtype)
-    c1.iparams = copy(c.iparams)
-    c1.fparams = copy(c.fparams)
-    c1.sparams = copy(c.sparams)
-    c1.oparams = deepcopy(c.oparams)
-    return c1
+    iparams = copy(c.iparams)
+    fparams = copy(c.fparams)
+    sparams = copy(c.sparams)
+    oparams = deepcopy(c.oparams)
+    return DaqConfig(iparams, fparams, sparams, oparams)
     
 end
 

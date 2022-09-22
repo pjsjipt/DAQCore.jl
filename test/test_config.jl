@@ -1,11 +1,9 @@
 # Testing the DaqConfig stuff
 
 let
-    c = DaqConfig("devname", "devtype"; ip="localhost", port=22, model="model",
+    c = DaqConfig(ip="localhost", port=22, model="model",
                   sn="1234", tag="TAG", a=0.0, b=1, c="PARAM", d=[1 2; 3 4])
     
-    @test devname(c) == "devname"
-    @test devtype(c) == "devtype"
     
     @test sparam(c, "ip") == "localhost"
     @test iparam(c, "port") == 22
@@ -73,8 +71,6 @@ let
 
     oparam!(c, "MAT"=>[1 2; 3 4])
     c1 = copy(c)
-    @test devname(c) == devname(c1)
-    @test devtype(c) == devtype(c1)
 
     for (k,v) in c.iparams
         @test iparam(c1, k) == v

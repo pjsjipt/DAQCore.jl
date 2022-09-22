@@ -53,7 +53,7 @@ function TestDaq(devname)
     task = DaqTask()
     rate = 100.0
     nsamples = 10
-    config = DaqConfig(devname, "TestDaq", nsamples=Int64(nsamples),
+    config = DaqConfig(nsamples=Int64(nsamples),
                        rate=100.0)
     signal = TestSignal{Float64}[]
     E = zeros(0,0)
