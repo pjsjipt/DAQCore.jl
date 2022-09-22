@@ -7,6 +7,17 @@ export daqaddinput, daqacquire, daqstart, daqread, daqstop, daqreference
 export daqconfig, daqconfigdev, daqzero, samplesread, isreading, issamplesavailable
 export numchannels, daqchannels, daqpeek, daqunits
 
+
+struct InputDev{Chans,Conf} <: AbstractInputDev
+    devname::String
+    devtype::String
+    chans::Chans
+    config::Conf
+end
+
+devname(dev::InputDev) = dev.devname
+devtype(dev::InputDev) = dev.devtype
+
 """
 `daqaddinput(dev, ...)`
 

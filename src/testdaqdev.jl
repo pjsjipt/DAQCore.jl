@@ -32,7 +32,7 @@ mutable struct TestDaq <: AbstractInputDev
     "Data acquisition Task"
     task::DaqTask
     "Coinfiguration"
-    conf::DaqConfig
+    config::DaqConfig
     "Parameters to generate trigonometric signals on each channel"
     signal::Vector{TestSignal{Float64}}
     "Buffer to store the data"
@@ -131,8 +131,8 @@ function daqconfig(dev::TestDaq; kw...)
         error("Either `nsamples` or `time` should be specified")
     end
 
-    iparam!(dev.conf, "nsamples", nsamples)
-    fparam!(dev.conf, "rate", rate)
+    iparam!(dev.config, "nsamples", nsamples)
+    fparam!(dev.config, "rate", rate)
     dev.E = zeros(numchannels(dev), nsamples)
     
     return
@@ -143,8 +143,8 @@ function filldata!(dev)
    
     nchans = numchannels(dev)
 
-    rate = fparam(dev.conf, "rate")
-    nsamples = iparam(dev.conf, "nsamples")
+    rate = fparam(dev.config, "rate")
+    nsamples = iparam(dev.config, "nsamples")
 
     tt = range(0.0, length=nsamples, step=1/rate)
     E = zeros(numchannels(dev), nsamples)
@@ -162,8 +162,8 @@ function daqacquire(dev::TestDaq)
 
     dev.task.isreading && error("Already reading!")
     
-    rate = fparam(dev.conf, "rate")
-    nsamples = iparam(dev.conf, "nsamples")
+    rate = fparam(dev.config, "rate")
+    nsamples = iparam(dev.config, "nsamples")
     sampling = DaqSamplingRate(rate, nsamples, now())
     dev.task.isreading = true
     sleep(samplingperiod(sampling)) # Let's wait a while
@@ -179,8 +179,8 @@ function daqstart(dev::TestDaq)
 
     dev.task.isreading && error("Already reading!")
 
-    rate = fparam(dev.conf, "rate")
-    nsamples = iparam(dev.conf, "nsamples")
+    rate = fparam(dev.config, "rate")
+    nsamples = iparam(dev.config, "nsamples")
     Δt = nsamples / rate  # Time to wait in seconds
     
     tinit = time_ns()
@@ -201,8 +201,8 @@ function daqread(dev::TestDaq)
         error("Not reading anything")
     end
     
-    rate = fparam(dev.conf, "rate")
-    nsamples = iparam(dev.conf, "nsamples")
+    rate = fparam(dev.config, "rate")
+    nsamples = iparam(dev.config, "nsamples")
 
     dev.task.isreading = false
     cleartask!(dev.task)
@@ -213,9 +213,9 @@ end
 
 isreading(dev::TestDaq) = dev.task.isreading
 samplesread(dev::TestDaq) =
-    min(iparam(dev.conf,"nsamples"),
+    min(iparam(dev.config,"nsamples"),
         round(Int, (time_ns()-dev.task.timing[1])*1e-9 *
-            fparam(dev.conf, "rate")))
+            fparam(dev.config, "rate")))
 
 isdaqfinished(dev::TestDaq) = !isreading(dev)
 

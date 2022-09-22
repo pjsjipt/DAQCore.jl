@@ -119,32 +119,32 @@ end
 
 
 # Lets extend this to any device. If it has a conf field, it can be used
-iparam(dev::AbstractDevice, param) = iparam(dev.conf, param)
-fparam(dev::AbstractDevice, param) = fparam(dev.conf, param)
-sparam(dev::AbstractDevice, param) = sparam(dev.conf, param)
-oparam(dev::AbstractDevice, param) = oparam(dev.conf, param)
+iparam(dev::AbstractDevice, param) = iparam(dev.config, param)
+fparam(dev::AbstractDevice, param) = fparam(dev.config, param)
+sparam(dev::AbstractDevice, param) = sparam(dev.config, param)
+oparam(dev::AbstractDevice, param) = oparam(dev.config, param)
 
-ihaskey(dev::AbstractDevice, param) = ihaskey(dev.conf, param)
-fhaskey(dev::AbstractDevice, param) = fhaskey(dev.conf, param)
-shaskey(dev::AbstractDevice, param) = shaskey(dev.conf, param)
-ohaskey(dev::AbstractDevice, param) = ohaskey(dev.conf, param)
+ihaskey(dev::AbstractDevice, param) = ihaskey(dev.config, param)
+fhaskey(dev::AbstractDevice, param) = fhaskey(dev.config, param)
+shaskey(dev::AbstractDevice, param) = shaskey(dev.config, param)
+ohaskey(dev::AbstractDevice, param) = ohaskey(dev.config, param)
 
 iparam!(dev::AbstractDevice, param::AbstractString, val) =
-    iparam!(dev.conf, param, val)
+    iparam!(dev.config, param, val)
 
 fparam!(dev::AbstractDevice, param::AbstractString, val) =
-    fparam!(dev.conf, param, val)
+    fparam!(dev.config, param, val)
 
 sparam!(dev::AbstractDevice, param::AbstractString, val) =
-    sparam!(dev.conf, param, val)
+    sparam!(dev.config, param, val)
 
 oparam!(dev::AbstractDevice, param::AbstractString, val) =
-    oparam!(dev.conf, param, val)
+    oparam!(dev.config, param, val)
 
-iparam!(dev::AbstractDevice, plst...) = iparam!(dev.conf, plst...)
-fparam!(dev::AbstractDevice, plst...) = fparam!(dev.conf, plst...)
-sparam!(dev::AbstractDevice, plst...) = sparam!(dev.conf, plst...)
-oparam!(dev::AbstractDevice, plst...) = oparam!(dev.conf, plst...)
+iparam!(dev::AbstractDevice, plst...) = iparam!(dev.config, plst...)
+fparam!(dev::AbstractDevice, plst...) = fparam!(dev.config, plst...)
+sparam!(dev::AbstractDevice, plst...) = sparam!(dev.config, plst...)
+oparam!(dev::AbstractDevice, plst...) = oparam!(dev.config, plst...)
 
 import Base.setindex!
 
