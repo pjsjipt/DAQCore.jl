@@ -2,7 +2,7 @@
 # Setup experimental points
 
 export ExperimentSetup, lastpoint, incpoint!, setpoint!, movenext!
-export finishedpoints
+export finishedpoints, inputdevice, outputdevice
 abstract type AbstractExperimentSetup end
 
 
@@ -165,3 +165,11 @@ end
     
 daqpoints(pts::ExperimentSetup) = daqpoints(pts.points)
 daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.points, i)
+parameters(pts::ExperimentSetup) = parameters(pts.points)
+numparams(pts::ExperimentSetup) = numparams(pts.points)
+
+axesnames(pts::ExperimentSetup) = axesnames(pts.odev)
+numaxes(pts::ExperimentSetup) = numaxes(pts.odev)
+
+inputdevice(pts::ExperimentSetup) = pts.idev
+outputdevice(pts::ExperimentSetup) = pts.odev
