@@ -139,7 +139,7 @@ In both of last cases, the indexing is forwarded to the `getindex` method for
 [`MeasData`](@ref) for data retrieval.
 
 """
-getindex(d::MeasDataSet, idx::Integer) = d.data[i]
+getindex(d::MeasDataSet, idx::Integer) = d.data[idx]
 getindex(d::MeasDataSet, dname::AbstractString) = d.data[d.devdict[dname]]
 
 getindex(d::MeasDataSet, dev, idx...) = d[dev][idx...]
