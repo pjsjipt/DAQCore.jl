@@ -9,6 +9,8 @@ abstract type AbstractExperimentSetup end
 mutable struct ExperimentSetup{IDev<:AbstractInputDev,Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentSetup
     "Index of last point measured"
     lastpoint::Int
+    "Has the experiment started?"
+    started::Bool
     "Data Input Devices"
     idev::IDev
     "Coordinates of points to be measured"
@@ -95,15 +97,10 @@ function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
     
     # Check compatibility and setup axes map
     axmap1, parmap, idx = setup_ap_map(axes, params, axmap)
-    return ExperimentSetup(0, idev, pts, odev, axmap1, parmap, idx)
+    return ExperimentSetup(0, false, idev, pts, odev, axmap1, parmap, idx)
 end
 
 
-numpoints(expdevs::ExperimentSetup) = numpoints(expdevs.points)
-parameters(expdevs::ExperimentSetup) = collect(keys(expdevs.parmap))
-axesnames(expdevs::ExperimentSetup) = collect(keys(expdevs.axmap))
-numaxes(expdevs::ExperimentSetup) = length(expdevs.axmap)
-numparams(expdevs::ExperimentSetup) = length(expdevs.axmap)
 
 
 """
@@ -157,19 +154,87 @@ function movenext!(pts::ExperimentSetup)
     pax = p[pts.idx]
     moveto!(pts.odev, a)
     incpoint!(pts.points)
-    return true # We moved, so we have not finished
+
+    if (lp+1) == numpoints(pts) # Last point
+        pts.started = false
+        return false
+    else
+        return true # We moved, so we have not finished
+    end
+    
 
     
 end
 
-    
+
+
+
 daqpoints(pts::ExperimentSetup) = daqpoints(pts.points)
 daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.points, i)
 parameters(pts::ExperimentSetup) = parameters(pts.points)
 numparams(pts::ExperimentSetup) = numparams(pts.points)
+numpoints(pts::ExperimentSetup) = numpoints(pts.points)
 
 axesnames(pts::ExperimentSetup) = axesnames(pts.odev)
 numaxes(pts::ExperimentSetup) = numaxes(pts.odev)
 
 inputdevice(pts::ExperimentSetup) = pts.idev
 outputdevice(pts::ExperimentSetup) = pts.odev
+
+
+function movenext!(pts::ExperimentSetup{IDev,Pts,ODev}) where {IDev<:AbstractInputDev,
+                                                               Pts<:AbstractDaqPoints,
+                                                               ODev<:OutputDevSet}
+    # Have we finished the measurements?
+    finishedpoints(pts) && return false  # It is over.
+
+    lp = lastpoint(pts) # Index of last point tested
+    x_next = daqpoint(pts.points, lp+1) # Coordinates to the next point
+    has_started = pts.started # Have we started moving yet?
+    
+    #=
+    When the output device is an `OutputDevSet`, each device should move independently.
+    Often this movement takes some time so it should be done only if necessary.
+    If the next point doesn't move some of the devices, then it shouldn't move.
+    An extreme situation happens when a device is manual, then moving every device
+    would imply waiting for manual input on every point, defeating any automation
+    on all other devices.
+
+    The idea is that devices that are more "difficult" to move (take longer, require
+    manual intervential, cost more), should be moved least of all. So the points with
+    coordinates corresponding to these "more expensive" devices should be programmed
+    to move less often.
+    
+    =#
+    if !has_started    # If it is the first point, move everything to it.
+        for  k in eachindex(pts.odev)
+            ax = axesnames(pts.odev[k]) # Get the name of the axes
+            a_next = [x_next[pts.parmap[aa]] for aa in ax]
+            moveto!(pts.odev[k], a_next)
+        end
+        pts.started = true
+    else # It is not the first point
+        x_last = daqpoint(pts, lp)
+        for k in eachindex(pts.odev)
+            ax = axesnames(pts.odev[k]) # Get the name of the axes
+            a_next = [x_next[pts.parmap[aa]] for aa in ax]
+            a_last = [x_last[pts.parmap[aa]] for aa in ax]
+
+            # We only need to move the device *if* the points have changed!
+            if a_next != a_last
+                moveto!(pts.odev[k], a_next)
+            end
+        end
+    end
+    incpoint!(pts)
+
+    if (lp+1) == numpoints(pts) # Last point
+        pts.started = false
+        return false
+    else
+        return true # We moved, so we have not finished
+    end
+    
+    
+end
+

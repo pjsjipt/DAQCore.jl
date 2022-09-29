@@ -60,48 +60,13 @@ function moveto!(odevs::OutputDevSet, x)
     
 end
 
+function devposition(odev::OutputDevSet)
 
-function movenext!(pts::ExperimentSetup{Pts,ODev}) where {Pts<:AbstractDaqPoints,
-                                                          ODev<:OutputDevSet}
-    # Have we finished the measurements?
-    finishedpoints(pts) && return false  # It is over.
-
-    lp = lastpoint(pts) # Index of last point tested
-    x_next = daqpoint(pts.points, lp+1) # Coordinates to the next point
-
-    #=
-    When the output device is an `OutputDevSet`, each device should move independently.
-    Often this movement takes some time so it should be done only if necessary.
-    If the next point doesn't move some of the devices, then it shouldn't move.
-    An extreme situation happens when a device is manual, then moving every device
-    would imply waiting for manual input on every point, defeating any automation
-    on all other devices.
-
-    The idea is that devices that are more "difficult" to move (take longer, require
-    manual intervential, cost more), should be moved least of all. So the points with
-    coordinates corresponding to these "more expensive" devices should be programmed
-    to move less often.
-    
-    =#
-    if lp == 0    # If it is the first point, move everything to it.
-        for  k in eachindex(pts.odev)
-            ax = axesnames(pts.odev[k]) # Get the name of the axes
-            a_next = [x_next[pts.parmap[aa]] for aa in ax]
-            moveto!(pts.odev[k], a_next)
-        end
-    else # It is not the first point
-        x_last = daqpoint(pts, lp)
-        for k in eachindex(pts.odev)
-            ax = axesnames(pts.odev[k]) # Get the name of the axes
-            a_next = [x_next[pts.parmap[aa]] for aa in ax]
-            a_last = [x_last[pts.parmap[aa]] for aa in ax]
-
-            # We only need to move the device *if* the points have changed!
-            if a_next != a_last
-                moveto!(pts.odev[k], a_next)
-            end
-        end
+    p = Float64[]
+    for dev in odev.odev
+        append!(p, devposition(dev))
     end
-    incpoint!(pts)
+    return p
+    
 end
 
