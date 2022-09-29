@@ -7,7 +7,6 @@ export daqtime, samplingrate, samplingtimes, samplinghours
 export numsamples, samplingperiod
 
 
-abstract type AbstractDaqSampling end
 
 """
 `DaqSamplingRate(rate, nsamples, time)`

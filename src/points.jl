@@ -2,7 +2,6 @@
 
 export AbstractDaqPoints, DaqPoints, DaqCartesianPoints, DaqPointsProduct
 export parameters, numpoints, numparams, daqpoint, daqpoints
-abstract type AbstractDaqPoints end
 
 mutable struct DaqPoints <: AbstractDaqPoints
     "Name of parameters that characterize the point"

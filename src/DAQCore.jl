@@ -5,7 +5,7 @@ import DataStructures: OrderedDict
 
 
 export AbstractDevice, AbstractInputDev, AbstractOutputDev, AbstractPressureScanner
-export AbstractDaqConfig, AbstractDaqTask
+export AbstractDaqConfig, AbstractDaqTask, AbstractExperiment
 export devname, devtype
 "Abstract type to handle any kind of device"
 abstract type AbstractDevice end
@@ -24,6 +24,13 @@ abstract type AbstractDaqTask end
 
 "Abstract type to handle pressure scanners"
 abstract type AbstractPressureScanner <: AbstractInputDev end
+
+abstract type AbstractExperiment end
+
+abstract type AbstractExperimentSetup end
+abstract type AbstractDaqChannels end
+abstract type AbstractDaqSampling end
+abstract type AbstractDaqPoints end
 
 
 """

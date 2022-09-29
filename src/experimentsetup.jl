@@ -3,7 +3,6 @@
 
 export ExperimentSetup, lastpoint, incpoint!, setpoint!, movenext!
 export finishedpoints, inputdevice, outputdevice
-abstract type AbstractExperimentSetup end
 
 
 mutable struct ExperimentSetup{IDev<:AbstractInputDev,Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentSetup

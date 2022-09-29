@@ -2,7 +2,6 @@
 import DataStructures: OrderedDict
 export AbstractDaqChannels, DaqChannels, numchannels, daqchannels, physchans
 
-abstract type AbstractDaqChannels end
 
 mutable struct DaqChannels{C,U} <: AbstractDaqChannels
     "Device name that contains the channels"
