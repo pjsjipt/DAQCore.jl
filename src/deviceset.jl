@@ -207,6 +207,12 @@ function daqacquire(devs::DeviceSet)
     return daqread(devs)
 end
 
+function daqstop(devs::DeviceSet)
+    for dev in devs.devices
+        daqstop(dev)
+    end
+end
+
 #import Base.getindex
 #Base.getindex
 samplesread(devs::DeviceSet) = samplesread(devs.devices[devs.iref])

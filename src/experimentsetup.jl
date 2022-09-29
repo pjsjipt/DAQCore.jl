@@ -100,6 +100,16 @@ function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
 end
 
 
+function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
+                         odev::AbstractOutputDev)
+
+    axmap = OrderedDict{String,String}()
+    for p in parameters(pts)
+        axmap[p] = p
+    end
+    return ExperimentSetup(idev, pts, odev, axmap)
+end
+
 
 
 """
@@ -151,8 +161,8 @@ function movenext!(pts::ExperimentSetup)
     lp = lastpoint(pts)
     p = daqpoint(pts.points, lp+1) # Get the coordinates of last point
     pax = p[pts.idx]
-    moveto!(pts.odev, a)
-    incpoint!(pts.points)
+    moveto!(pts.odev, pax)
+    incpoint!(pts)
 
     if (lp+1) == numpoints(pts) # Last point
         pts.started = false
