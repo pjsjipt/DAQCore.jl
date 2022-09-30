@@ -11,6 +11,7 @@ mutable struct DeviceSet{DevList} <: AbstractInputDev
     devices::DevList
     "Map from device name to device index in `devices`."
     devdict::OrderedDict{String,Int}
+    time::DateTime
 end
 
 """
@@ -33,7 +34,7 @@ function DeviceSet(dname, devices::DevList, iref=1) where {DevList}
         devdict[devname(dev)] = i
     end
     
-    return DeviceSet(dname, iref, devices, devdict)
+    return DeviceSet(dname, iref, devices, devdict, now())
 end
 
 
@@ -187,13 +188,11 @@ Read the data from every device in `DeviceSet`. It stores this data in a diction
 where the key is the device name and the value is the data.
 """
 function daqread(devs::DeviceSet)
-    data = OrderedDict{String,MeasData}()
-    
+    #data = OrderedDict{String,MeasData}()
+    data = MeasData[]
     for dev in devs.devices
-        d = daqread(dev)
-        data[devname(d)] = d
+        push!(data, daqread(dev))
     end
-    
     return MeasDataSet(devname(devs), "DeviceSet", devs.time, data)
 end
 
@@ -203,6 +202,7 @@ end
 Execute a synchronous data acquisition of every device.
 """
 function daqacquire(devs::DeviceSet)
+    devs.time = now()
     daqstart(devs)
     return daqread(devs)
 end
