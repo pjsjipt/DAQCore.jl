@@ -13,10 +13,44 @@ export numsamples, samplingperiod
 
 Data acquisition timing when the sampling rate is fixed.
 
+If instead of a fixed sampling rate, specific sampling times
+is required, use [`DaqSamplingTimes`](@ref). If neither of these types
+is sufficient, just implement a new [`AbstractDaqSampling`](@ref) struct.
+
+The following methods are available:
+ * [`daqtime`](@ref) to retrieve initial data acquisition time
+ * [`samplingrate`](@ref) to get the sampling rate in Hz
+ * [`samplingtimes`](@ref) to get the sampling times in seconds of each sample from the beginning
+ * [`samplinghours`](@ref) to get a [`Dates.DateTime`](@ref) object of each sample.
+ * [`Base.getindex`](@ref) to retrieve a specific sampling time
+ * [`numsamples`](@ref) or [`Base.length`](@ref) to get the total number of samples.
+
 ## Arguments
  * `rate` Sampling rate in Hz
  * `nsamples` Number of samples
  * `time` `DateTime` object when the data acquisition started
+
+## Example
+
+```julia-repl
+julia> s = DaqSamplingRate(1.0, 3, now())
+DaqSamplingRate(1.0, 3, DateTime("2022-10-04T10:14:36.072"))
+
+julia> daqtime(s)
+2022-10-04T10:14:36.072
+
+julia> samplingrate(s)
+1.0
+
+julia> samplingtimes(s)
+0.0:1.0:2.0
+
+julia> samplinghours(s)
+3-element Vector{DateTime}:
+ 2022-10-04T10:14:36.072
+ 2022-10-04T10:14:37.072
+ 2022-10-04T10:14:38.072
+```
 """
 struct DaqSamplingRate <: AbstractDaqSampling
     "Sampling rate in Hz"
@@ -64,6 +98,42 @@ Sampling times when each sample is timed.
 Each sampling time should be an `AbstractDateTime`, usually
 `DateTime` itself. Any kind of abstract vector can be used.
 
+If instead of a sampling times, specific fixed sampling rate is required, 
+use [`DaqSamplingRate`](@ref). If neither of these types
+is sufficient, just implement a new [`AbstractDaqSampling`](@ref) struct.
+
+The following methods are available:
+ * [`daqtime`](@ref) to retrieve initial data acquisition time
+ * [`samplingrate`](@ref) to get the sampling rate in Hz
+ * [`samplingtimes`](@ref) to get the sampling times in seconds of each sample from the beginning
+ * [`samplinghours`](@ref) to get a [`Dates.DateTime`](@ref) object of each sample.
+ * [`Base.getindex`](@ref) to retrieve a specific sampling time
+ * [`numsamples`](@ref) or [`Base.length`](@ref) to get the total number of samples.
+
+## Example
+
+```julia-repl
+julia> s = DaqSamplingTimes(t)
+DaqSamplingTimes{DateTime, Vector{DateTime}}([DateTime("2022-10-04T10:17:38.293"), DateTime("2022-10-04T10:17:39.293"), DateTime("2022-10-04T10:17:40.293"), DateTime("2022-10-04T10:17:41.293")])
+
+julia> samplingrate(s)
+1.0
+
+julia> samplingtimes(s)
+4-element Vector{Float64}:
+ 0.0
+ 1.0
+ 2.0
+ 3.0
+
+julia> samplinghours(s)
+4-element Vector{DateTime}:
+ 2022-10-04T10:17:38.293
+ 2022-10-04T10:17:39.293
+ 2022-10-04T10:17:40.293
+ 2022-10-04T10:17:41.293
+
+```
 """
 struct DaqSamplingTimes{T<:AbstractDateTime,V<:AbstractVector{T}} <: AbstractDaqSampling
     "DateTime of each sample read"

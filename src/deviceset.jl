@@ -20,11 +20,63 @@ end
 Create a meta device that handles data acquisition from several independent interfaces.
 
 The `devices` argument specifies the individual DAQ devices that are used. It could
-be a tuple (recommended) or a vector of AbstractDAQ.
+be a tuple (recommended) or a vector of AbstractInputDev.
 
 The argument `iref` corresponds to the reference device (if it exists). 
-This reference device is simply the device that is used when checking if data acquisition 
-is ongoing or how many samples have been read.
+This reference device is simply the device that is used when checking whether
+ data acquisition is ongoing or how many samples have been read.
+
+As is usually the case, there should be a unique `devname` associated with
+each `DeviceSet` object.
+
+Individual devices have channels and method [`daqchannels`](@ref) can be used to get
+the names of each channel. Since different devices in a `DeviceSet` can have the same
+channels, the complete characterization of a channel should have the specific device
+name (`devname` field) attached to it, therefore each channel will be a vector of
+character strings.
+
+Most data acquisition functions work with `DeviceSet` objects. One difference here
+is that the return value of [`daqacquire`](@ref) and [`daqread`](@ref) is no longer
+a [`MeasData`](@ref) but instead it is a [`MeasDataSet`](@ref) that contains the
+data acquired by each individual device. See example below and the documentation for
+[`MeasDataSet`](@ref) on how to access the data.
+
+
+## Examples
+
+```julia-repl
+julia> dev1 = TestDaq("Device1");
+
+julia> dev2 = TestDaq("Device2");
+
+julia> daqaddinput(dev1, ["E1", "E2"]);
+
+julia> daqaddinput(dev2, ["P1", "P2"]);
+
+julia> dev = DeviceSet("devices", (dev1, dev2));
+
+julia> daqchannels(dev1)
+2-element Vector{String}:
+ "E1"
+ "E2"
+
+julia> daqchannels(dev2)
+2-element Vector{String}:
+ "P1"
+ "P2"
+
+julia> daqchannels(dev)
+4-element Vector{Vector{String}}:
+ ["Device1", "E1"]
+ ["Device1", "E2"]
+ ["Device2", "P1"]
+ ["Device2", "P2"]
+
+julia> X = daqacquire(dev);
+
+julia> typeof(X)
+MeasDataSet{Vector{MeasData}}
+```
 """
 function DeviceSet(dname, devices::DevList, iref=1) where {DevList}
 
@@ -48,12 +100,20 @@ Return the `i`-th device of a device set
 getindex(dev::DeviceSet, i) = dev.devices[i]
 getindex(dev::DeviceSet, dname::AbstractString) = dev.devices[dev.devdict[dname]]
 
+numchannels(d::DeviceSet) = sum(numchannels(d) for d in d.devices)
 
-"""
-`MeasDataSet(devname, devtype, time, data)`
+function daqchannels(d::DeviceSet)
+    chans = Vector{String}[]
+    for dev in d.devices
+        devchans = daqchannels(dev)
+        dname = devname(dev)
+        for c in devchans
+            push!(chans, [dname, c])
+        end
+    end
+    return chans
+end
 
-Stores the data acquired by a `DeviceSet`.
-"""
 struct MeasDataSet{MeasSet} <: AbstractMeasData
     "Device name"
     devname::String
@@ -67,6 +127,67 @@ struct MeasDataSet{MeasSet} <: AbstractMeasData
     devdict::OrderedDict{String,Int}
 end
 
+"""
+`MeasDataSet(devname, devtype, time, data)`
+
+Stores the data acquired by a [`DeviceSet`](@ref). It is basically a strucure made up
+of individiaul measurement data from each device in the the [`DeviceSet`](@ref).
+
+To access data, [`Base.getindex`](@ref) is used. But in this case, the device name is
+used as a first dimension. See example below.
+
+## Examples
+
+```julia-repl
+julia> dev1 = TestDaq("Device1");
+
+julia> dev2 = TestDaq("Device2");
+
+julia> daqaddinput(dev1, ["E1", "E2"]);
+
+julia> daqaddinput(dev2, ["P1", "P2"]);
+
+julia> dev = DeviceSet("devices", (dev1, dev2));
+
+julia> daqchannels(dev1)
+2-element Vector{String}:
+ "E1"
+ "E2"
+
+julia> daqchannels(dev2)
+2-element Vector{String}:
+ "P1"
+ "P2"
+
+julia> daqchannels(dev)
+4-element Vector{Vector{String}}:
+ ["Device1", "E1"]
+ ["Device1", "E2"]
+ ["Device2", "P1"]
+ ["Device2", "P2"]
+
+julia> X = daqacquire(dev);
+
+julia> typeof(X)
+MeasDataSet{Vector{MeasData}}
+
+julia> daqchannels(X)
+4-element Vector{Vector{String}}:
+ ["Device1", "E1"]
+ ["Device1", "E2"]
+ ["Device2", "P1"]
+ ["Device2", "P2"]
+
+julia> e1 = X["Device1", "E1"]; # accessing channel E1 of Device1
+
+julia> e1b = X[1, 1]; # accessing channel 1 of first device
+
+julia> X["Device1", "E1",10] # accessing 10th sample from channel E1 of Device1
+0.41221474770752664
+
+```
+
+"""
 function MeasDataSet(dname, devtype, time, datasets)
 
     devdict = OrderedDict{String,Int}()
@@ -155,12 +276,12 @@ Return channel names associated with each device that is acquiring data.
 The device name is prepended to the channel name separated by a '/'.
 """
 function daqchannels(d::MeasDataSet)
-    chans = String[]
+    chans = Vector{String}[]
     for data in d.data
         devchans = daqchannels(data)
         dname = devname(data)
         for c in devchans
-            push!(chans, dname * "/" * c)
+            push!(chans, [dname, c])
         end
     end
     return chans

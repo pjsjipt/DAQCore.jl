@@ -27,11 +27,16 @@ abstract type AbstractDaqTask end
 "Abstract type to handle pressure scanners"
 abstract type AbstractPressureScanner <: AbstractInputDev end
 
+"Abstract type to handle generic, complete experiments"
 abstract type AbstractExperiment end
 
+"Abstract type to deal with experimental setup (input/output devices, points)"
 abstract type AbstractExperimentSetup end
+"Abstract channel definintion type"
 abstract type AbstractDaqChannels end
+"Abstract sampling times and rates type"
 abstract type AbstractDaqSampling end
+"Abstract experimental points definition"
 abstract type AbstractDaqPoints end
 
 

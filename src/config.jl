@@ -18,7 +18,81 @@ mutable struct DaqConfig <: AbstractDaqConfig
     oparams::OrderedDict{String,Any}
 end
 
+"""
+`DaqConfig(; kw...)`
 
+Store configuration parameters. This is always necessary and the idea here is
+to be able to store different types of configuration parameters.
+
+For now, it is possible to store
+
+ * Integer parameters
+ * Floating point parameters
+ * String parameters
+ * Other types
+
+`DaqConfig` has ordered dictionaries that store the different types of data.
+
+When creating a `DaqConfig` object, parameters can be set on the go as
+keyword arguments:
+
+```julia
+cfg = DaqConfig(x=1, y=1.1, z="two", w=[1,2,3]
+```
+This will create a `DaqConfig` object with the following parameters
+
+ * `x` an integer parameter with value 1
+ * `y` a floating point parameter with value 1.1
+ * `z` a string parameter with value "two"
+ * `w` a parameter with any type (in this case `Vector{Int}`)
+
+The parameters can be accessed using the methods [`iparam`](@ref) (integer
+parameters), [`fparam`](@ref) (floating point parameters), [`sparam`](@ref)
+string parameters and [`oparam'](@ref) for any other type of parameter.
+
+To add parameters, use methods [`iparam!`](@ref), [`fparam!`](@ref),
+[`sparam!](@ref) and [`oparam!`](@ref).
+
+To check if a parameter is available, use the methods
+ * [`ihaskey`](@ref)
+ * [`fhaskey`](@ref)
+ * [`shaskey`](@ref)
+ * [`ohaskey`](@ref)
+
+## Example
+
+```julia-repl
+julia> cfg = DaqConfig(x=1, y=1.1, z="two", w=[1,2,3])
+DaqConfig(OrderedCollections.OrderedDict("x" => 1), OrderedCollections.OrderedDict("y" => 1.1), OrderedCollections.OrderedDict("z" => "two"), OrderedCollections.OrderedDict{String, Any}("w" => [1, 2, 3]))
+
+julia> iparam(cfg, "x")
+1
+
+julia> fparam(cfg, "y")
+1.1
+
+julia> sparam(cfg, "z")
+"two"
+
+julia> oparam(cfg, "w")
+3-element Vector{Int64}:
+ 1
+ 2
+ 3
+
+julia> iparam!(cfg, "x2", 2)
+2
+
+julia> iparam(cfg, "x2")
+2
+
+julia> iparam!(cfg, "x", 123)
+123
+
+julia> iparam(cfg, "x")
+123
+```
+"""
 function DaqConfig(; kw...)
 
     fparams = OrderedDict{String,Float64}()
@@ -54,13 +128,13 @@ function Base.copy(c::DaqConfig)
     
 end
 
-"Retrieve integer configuration parameter"
+"Retrieve integer configuration parameter of [`DaqConfig`](@ref) objects"
 iparam(dconf::DaqConfig, param) = dconf.iparams[param]
-"Retrieve string configuration parameter"
+"Retrieve string configuration parameter of [`DaqConfig`](@ref) objects"
 sparam(dconf::DaqConfig, param) = dconf.sparams[param]
-"Retrieve float configuration parameter"
+"Retrieve float configuration parameter of [`DaqConfig`](@ref) objects"
 fparam(dconf::DaqConfig, param) = dconf.fparams[param]
-"Retrieve other configuration parameters types"
+"Retrieve other configuration parameters of [`DaqConfig`](@ref) objects"
 oparam(dconf::DaqConfig, param) = dconf.oparams[param]
 
 "Do integer parameters have key `param`?"
@@ -72,7 +146,7 @@ shaskey(c::DaqConfig, param) = haskey(c.sparams, param)
 "Do `Any` parameters have key `param`?"
 ohaskey(c::DaqConfig, param) = haskey(c.oparams, param)
 
-
+"Set an integer parameter of [`DaqConfig`](@ref) objects"
 iparam!(dconf::DaqConfig, param::AbstractString, val) =
     dconf.iparams[string(param)] = Int64(val)
 function iparam!(dconf::DaqConfig, plst...)
@@ -83,6 +157,7 @@ end
 
 
                  
+"Set an floating point parameter of [`DaqConfig`](@ref) objects"
 fparam!(dconf::DaqConfig, param::AbstractString, val) = 
     dconf.fparams[string(param)] = Float64(val)
 
@@ -92,6 +167,7 @@ function fparam!(dconf::DaqConfig, plst...)
     end
 end
 
+"Set an string parameter of [`DaqConfig`](@ref) objects"
 sparam!(dconf::DaqConfig, param::AbstractString, val) =
     dconf.sparams[string(param)] = string(val)
 
@@ -101,6 +177,7 @@ function sparam!(dconf::DaqConfig, plst...)
     end
 end
 
+"Set parameters of any types of [`DaqConfig`](@ref) objects"
 oparam!(dconf::DaqConfig, param::AbstractString, val::Any) = dconf.oparams[param] = val
 
 function oparam!(dconf::DaqConfig, plst...)

@@ -6,12 +6,6 @@ export MeasData, measdata, samplingrate
 abstract type AbstractMeasData end
 
 
-"""
-`MeasData`
-
-Structure to store data acquired from a DAQ device. It also stores metadata related to 
-the DAQ device, data acquisition process and daq channels.
-"""
 mutable struct MeasData{T,AT,S<:AbstractDaqSampling,
                         CH<:AbstractDaqChannels} <: AbstractMeasData
     "Device that generated the data"
@@ -26,6 +20,88 @@ mutable struct MeasData{T,AT,S<:AbstractDaqSampling,
     chans::CH
 end
 
+"""
+`MeasData(devname, devtype, sampling, data, chans)`
+
+Structure to store data acquired from a DAQ device. It also stores metadata related to 
+the DAQ device, data acquisition process and daq channels.
+
+When an input device acquires data, this device has a `devname` by which it is referred
+to in all of the `DAQCore` ecosystem. It also has a type, sampling information, the data
+itself and channel information. The `MeasData` handles all of this.
+
+Most often, the data will be stored as a matrix where each *column* corresponds to a sample.
+Of course, any other type of arrangement is possible since this is a parametric field
+(image information could be an example of a different type of data). But most methods
+assume that the data is stored as a matrix and each sample corresponds to a column. For other
+configurations, methods might have to be implemented.
+
+The sampling information refers to the timing of each sample, in most cases it will be
+a [`DaqSamplingRate`](@ref) or [`DaqSamplingTimes`](@ref) object but more specific information
+can be stored since this is a parametric field.
+
+The information on the channels is stored in the `chans` field.
+
+Data from specific channels can be retrieved using the `getindex` method either specifying the
+channel name or channel index.
+
+Most methods related to [`DaqChannels`](@ref) are reimplemented for `MeasData`. The same is true
+for sampling information (usually [`DaqSamplingRate`](@ref)  or [`DaqSamplingTimes`](@ref))
+## Example
+
+```julia-repl
+julia> ch = DaqChannels("test", "TestDevice", "E", 4)
+DaqChannels{String, String}("test", "TestDevice", "", ["E1", "E2", "E3", "E4"], OrderedCollections.OrderedDict("E1" => 1, "E2" => 2, "E3" => 3, "E4" => 4), "")
+
+julia> s = DaqSamplingRate(1.0, 5, now())
+DaqSamplingRate(1.0, 5, DateTime("2022-10-04T10:36:33.722"))
+
+julia> data = randn(4,5);
+
+julia> X = MeasData("Test", "TestDevice", s, data, ch);
+
+julia> X[1]
+5-element view(::Matrix{Float64}, 1, :) with eltype Float64:
+  1.2410386624221996
+ -0.6314641591019056
+  1.2806557053182634
+  0.23158415744317515
+ -0.10486298127332715
+
+julia> X["E1"]
+5-element view(::Matrix{Float64}, 1, :) with eltype Float64:
+  1.2410386624221996
+ -0.6314641591019056
+  1.2806557053182634
+  0.23158415744317515
+ -0.10486298127332715
+
+julia> numsamples(X)
+5
+
+julia> samplingrate(X)
+1.0
+
+julia> X[]
+4×5 Matrix{Float64}:
+  1.24104   -0.631464    1.28066    0.231584  -0.104863
+  0.166224  -0.671223   -1.35862   -0.342828   0.215685
+ -0.389965   2.47486    -1.00073    0.733181   0.224016
+  0.776375   0.0642885  -0.381338  -0.842996  -0.111027
+
+julia> daqchannels(X)
+4-element Vector{String}:
+ "E1"
+ "E2"
+ "E3"
+ "E4"
+
+julia> X["E2",1]
+0.16622444557689256
+
+```
+
+"""
 function MeasData(devname, devtype, sampling::S,
                   data::AbstractMatrix{T},
                   chans::CH) where {T,S<:AbstractDaqSampling,
