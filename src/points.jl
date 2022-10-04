@@ -20,14 +20,62 @@ Defines a sequence of predefined points that characterize an experiment.
 The points are defined by a `Matrix{Float64}` where each column corresponds to a 
 parameter (degree of freedom) of the system. Each row characterizes a specific point.
 
+The following methods implement the `AbstractDaqPoints` interface with
+methods
+ * [`parameters`](@ref) list the parameters of the points
+ * [`numparams`](@ref) gets the number of parameters
+ * [`numpoints`](@ref) gets the number of points
+ * [`daqpoints`](@ref) gets a matrix where each row is a point and each column corresponds to a parameter
+ * [`dappoint`](@ref) gets the values of each parameter of a specific point
+ 
+
 ## Arguments
 
  * `params` Vector/tuple containing the names of the parameters that define the position. It will be converted to a string.
  * `pts` Matrix that contains the points. Each column corresponds to a variable and each row to a single point.
  * `kw...` Keyword arguments where the names of the keywords correspond to the variables and the values to the possible positions. The length of each keyword argument should be the same or 1. If its 1, it will be repeated.
 
+
+## Examples
+
+```julia-repl
+julia> p1 = DaqPoints(["a", "b"], [1 10; 2 20; 3 30])
+DaqPoints(["a", "b"], [1.0 10.0; 2.0 20.0; 3.0 30.0])
+
+julia> p2 = DaqPoints(a=[1,2,3]; b=[10,20,30])
+DaqPoints(["a", "b"], [1.0 10.0; 2.0 20.0; 3.0 30.0])
+
+julia> parameters(p1)
+2-element Vector{String}:
+ "a"
+ "b"
+
+julia> numparams(p1)
+2
+
+julia> daqpoints(p1)
+3×2 Matrix{Float64}:
+ 1.0  10.0
+ 2.0  20.0
+ 3.0  30.0
+
+julia> daqpoint(p1,1)
+2-element Vector{Float64}:
+  1.0
+ 10.0
+
+julia> numpoints(p1)
+3
+
+### See also
+
+ * [`DaqCartesianPoints`](@ref)
+ * [`DaqPointsProduct`](@ref)
+
+
+```
 """
-function DaqPoints(params, pts::AbstractMatrix{Float64})
+function DaqPoints(params, pts::AbstractMatrix)
     
     npars = size(pts, 2)
     nvals = size(pts, 1)
@@ -96,6 +144,8 @@ numpoints(pts::DaqPoints) = size(pts.pts,1)
 daqpoint(pts::DaqPoints, i) = pts.pts[i, :]
 daqpoints(pts::DaqPoints) = pts.pts
 
+"Performs "
+
 mutable struct DaqCartesianPoints <: AbstractDaqPoints
     params::Vector{String}
     axes::Vector{Vector{Float64}}
@@ -107,7 +157,6 @@ end
 `cartesianprod(x...)`
 
 Performs a cartesian product between vectors
-
 """
 function cartesianprod(x::Vector{Vector{T}}) where {T}
     npars = length(x)
@@ -144,10 +193,15 @@ cartesianprod(x1...) = cartesianprod([collect(y) for y in x1])
 """
 `DaqCartesianPoints(;kw...)`
 
-Creates a test matrix that is a cartesian product  of independent parameters.
+Creates points matrix that is a cartesian product  of independent parameters.
 This is useful if the test should be executed on a regular grid, x, y for example.
 In this grid, the length of x is n₁ and the length of y is n₂. The number of points
 in the test is therefore nx⋅ny.
+
+This could be implemented on top of [`DaqPoints`](@ref) but often when plotting, it
+is useful to have the values on each axis readily available. As an example, consider
+the  measurement on the plane x-y where later on it will be necessary to plot contour
+of data.
 
 The first parameters run faster:
 
@@ -168,6 +222,52 @@ The points of the test matrix are
 | x₂ | y₂ |
 | ⋮  | ⋮  |
 | xₙ₁| yₙ₂|
+
+Again, the following methods implement the `AbstractDaqPoints` interface with
+methods
+ * [`parameters`](@ref) list the parameters of the points
+ * [`numparams`](@ref) gets the number of parameters
+ * [`numpoints`](@ref) gets the number of points
+ * [`daqpoints`](@ref) gets a matrix where each row is a point and each column corresponds to a parameter
+ * [`dappoint`](@ref) gets the values of each parameter of a specific point
+ 
+
+## Examples
+ulia> p = DaqCartesianPoints(x=1:3, y=1:4)
+DaqCartesianPoints(["x", "y"], [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0, 4.0]], [1.0 1.0; 2.0 1.0; … ; 2.0 4.0; 3.0 4.0])
+
+julia> parameters(p)
+2-element Vector{String}:
+ "x"
+ "y"
+
+julia> daqpoints(p)
+12×2 Matrix{Float64}:
+ 1.0  1.0
+ 2.0  1.0
+ 3.0  1.0
+ 1.0  2.0
+ 2.0  2.0
+ 3.0  2.0
+ 1.0  3.0
+ 2.0  3.0
+ 3.0  3.0
+ 1.0  4.0
+ 2.0  4.0
+ 3.0  4.0
+
+julia> p.axes
+2-element Vector{Vector{Float64}}:
+ [1.0, 2.0, 3.0]
+ [1.0, 2.0, 3.0, 4.0]
+
+julia> 
+```
+
+### See also
+
+ * [`DaqPoints`](@ref)
+ * [`DaqPointsProduct`](@ref)
 
 
 """
@@ -207,7 +307,7 @@ end
 Cartesian product between different AbstractDaqPoints objects.
 
 Imagine an experiment where several actuators are used. As an example, in a 
-wind tunnel this could be a cartesian robot with 3 axes, the turn table and 
+wind tunnel this could be a cartesian robot with 3 axes, the turn table or 
 fan speed. During the experiment, all actuators will be used and each 
 experimental point corresponds to a a given configuration of the actuators.
 
@@ -216,7 +316,53 @@ actuator into a single 'meta-'point.
 
 The arguement `points` is a tuple or vector of `AbstractExeperimentMatrix`.
 
-The order of motion is: first points first. 
+The order of motion is: first points first.
+
+The difference between `DaqPointsProduct` and [`DaqCartesianPoints`](@ref) is that
+in the case of `DaqPointsProduct`, the cartesian product is not between individual
+axes but on set of axes. Usually each set of axes correspond to a different output
+device and we keep track of each set so that the actuators can be *easily* acted on
+independently.
+
+## Examples
+
+```julia-repl
+julia> z = DaqPoints(z=100:100:400);
+
+julia> rpm = DaqPoints(rpm=200:50:300);
+
+julia> pts = z * rpm;
+
+julia> parameters(pts)
+2-element Vector{String}:
+ "z"
+ "rpm"
+
+julia> daqpoints(pts)
+12×2 Matrix{Float64}:
+ 100.0  200.0
+ 200.0  200.0
+ 300.0  200.0
+ 400.0  200.0
+ 100.0  250.0
+ 200.0  250.0
+ 300.0  250.0
+ 400.0  250.0
+ 100.0  300.0
+ 200.0  300.0
+ 300.0  300.0
+ 400.0  300.0
+
+julia> pts1 = DaqPointsProduct(z,rpm); # Same as pts
+```
+
+
+### See also
+
+ * [`DaqPoints`](@ref)
+ * [`DaqCartesianPoints`](@ref)
+
+
 """
 function DaqPointsProduct(points::PtsLst) where {PtsLst}
     

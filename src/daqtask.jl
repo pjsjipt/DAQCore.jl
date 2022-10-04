@@ -4,6 +4,17 @@ export stoptask, stoptask!, samplingrate, settiming!, daqtask, setdaqtask!
 
 
 
+"""
+`DaqTasq`
+
+Creates a structure that handles asynchronous data acquisition.
+
+This structure stores the number of samples read and the general state of data 
+acquisition. It also provides timing measurements so that sampling frequency
+can estimated and the time and date when the task began. 
+
+It also stores a `Task` object that might be used for asynchronous data acquisition.
+"""
 mutable struct DaqTask <: AbstractDaqTask
     "Number of frames read"
     nread::Int
@@ -19,18 +30,6 @@ mutable struct DaqTask <: AbstractDaqTask
     time::DateTime
     "`Task` object executing the data acquisition"
     task::Task
-    """
-    `DaqTasq`
-    
-    Creates a structure that handles asynchronous data acquisition.
-
-    This structure stores the number of samples read and the general state of data 
-    acquisition. It also provides timing measurements so that sampling frequency
-    can estimated and the time and date when the task began. 
-
-    It also stores a `Task` object that might be used for asynchronous data acquisition.
-
-    """
     DaqTask() = new(0,false,false,false, (UInt64(0),UInt64(0),UInt64(0)),
                     now(), Task(()->0))
 end
