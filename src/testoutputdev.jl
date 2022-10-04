@@ -71,14 +71,7 @@ devposition(dev::TestOutputDev, ax::Integer) = dev.x[ax]
 
 devposition(dev::TestOutputDev, axes::AbstractVector) = dev.x[axes]
 
-function devposition(dev::TestOutputDev)
-    pos = OrderedDict{String,Float64}()
-
-    for i in 1:numaxes(dev)
-        pos[dev.axes[i]] = dev.x[i]
-    end
-    return pos
-end
+devposition(dev::TestOutputDev) = dev.x
 
 positionX(dev::TestOutputDev) = devposition(dev, "x")
 positionY(dev::TestOutputDev) = devposition(dev, "y")

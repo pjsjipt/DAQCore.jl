@@ -3,6 +3,12 @@
 export OutputDev, numaxes, axesnames, moveto!, devposition, stopoutputdev
 export waituntildone
 
+"""
+`OutputDev(devname, devtype, axes, config)`
+
+Generic interface for output devices. Mostly used for IO of devices
+that have no specific methods implemented.
+"""
 struct OutputDev <: AbstractOutputDev
     devname::String
     devtype::String
@@ -36,6 +42,11 @@ Move to an arbitrary point. The point is specified by vector `x`.
 """
 function moveto! end
 
+"""
+`devposition(dev)`
+
+Returns a vector with the present position of the output device.
+"""
 function devposition end
 
 """

@@ -7,7 +7,14 @@ export daqaddinput, daqacquire, daqstart, daqread, daqstop, daqreference
 export daqconfig, daqconfigdev, daqzero, samplesread, isreading, issamplesavailable
 export numchannels, daqchannels, daqpeek, daqunits
 
+"""
+`InputDev(devname, devtype, chans, config)`
 
+Generic interface for input devices.
+
+This is mostly used for loading configurations that do not have
+any specific IO methods.
+"""
 struct InputDev{Chans,Conf} <: AbstractInputDev
     devname::String
     devtype::String
