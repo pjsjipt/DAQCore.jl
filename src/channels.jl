@@ -107,7 +107,7 @@ function DaqChannels(devname, devtype, channels::AbstractVector,
     chanmap = OrderedDict{String,Int}()
 
     for (i,v) in enumerate(chans)
-        chanmap[v] = i
+        chanmap[v] = Int(i)
     end
 
     return DaqChannels(devname, devtype, physchans, chans, chanmap, units)
