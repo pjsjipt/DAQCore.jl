@@ -58,6 +58,8 @@ devname(dev::AbstractDevice) = dev.devname
 function devtype end
 devtype(dev::AbstractDevice) = string(typeof(dev))
 
+
+
 include("utils.jl")
 include("daq.jl")
 include("circbuffer.jl")
@@ -73,5 +75,17 @@ include("outputdevset.jl")
 include("experimentsetup.jl")
 include("testdaqdev.jl")
 include("testoutputdev.jl")
+
+
+"Empty generic function for filter application"
+function daqfilter end
+
+"Empty generic function for filter application"
+function daqfilter! end
+
+devtype(filt::AbstractDaqFilter) = "Filter"
+
+(filt::AbstractDaqFilter)(x::AbstractMeasData) = daqfilter(filt, x)
+(filt::AbstractDaqFilter)(x::AbstractMeasData, y) = daqfilter!(filt, x, y)
 
 end
