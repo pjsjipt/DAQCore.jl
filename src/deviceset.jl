@@ -264,7 +264,12 @@ In both of last cases, the indexing is forwarded to the `getindex` method for
 getindex(d::MeasDataSet, idx::Integer) = d.data[idx]
 getindex(d::MeasDataSet, dname::AbstractString) = d.data[d.devdict[dname]]
 
-getindex(d::MeasDataSet, dev, idx...) = d[dev][idx...]
+getindex(d::MeasDataSet, devchan::Tuple{<:AbstractString,T}) where {T} =
+    d[d.devdict[devchan[1]]][devchan[2]]
+getindex(d::MeasDataSet, devchan::Tuple{<:Integer,T}) where {T} =
+    d[devchan[1]][devchan[2]]
+
+
 
 
 numchannels(d::MeasDataSet) = sum(numchannels(d) for d in d.data)

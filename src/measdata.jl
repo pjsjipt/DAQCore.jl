@@ -175,6 +175,20 @@ end
 
 getindex(d::MeasData) = d.data
 
+getindex(d::MeasData{T,<:AbstractMatrix{T}},
+         idx::AbstractVector{<:Integer}) where {T} =
+    view(d.data, idx, :)
+
+getindex(d::MeasData{T,<:AbstractMatrix{T}},
+         idx::AbstractVector{<:AbstractString}) where {T} =
+    view(d.data, [d.chans[s] for s in idx], :)
+
+function chanslice(d::MeasData{T,<:AbstractMatrix{T}},
+                   idx::AbstractVector) where {T}
+    ch = chanslice(d.chans, idx)
+    MeasData(d.devname, d.devtype, d.sampling, d[idx], ch)
+end
+
 
 import Base.size
 

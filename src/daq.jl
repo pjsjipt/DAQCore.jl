@@ -32,6 +32,17 @@ Add channels that should be acquired.
 """
 function daqaddinput end
 
+
+numchannels(dev::AbstractInputDev) = numchannels(dev.chans)
+daqchannels(dev::AbstractInputDev) = daqchannels(dev.chans)
+
+import Base.getindex
+getindex(dev::AbstractInputDev, idx) = daqchannels(dev.chans)
+
+import Base.setindex!
+setindex!(dev::AbstractInputDev, chan, idx) = setindex!(dev.chans,chan,idx)
+
+
 """
 `daqacquire(dev)`
 

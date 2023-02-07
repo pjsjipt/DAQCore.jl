@@ -1,6 +1,7 @@
 
 import DataStructures: OrderedDict
 export AbstractDaqChannels, DaqChannels, numchannels, daqchannels, physchans
+export chanslice
 
 
 mutable struct DaqChannels{C,U} <: AbstractDaqChannels
@@ -126,8 +127,13 @@ end
 devname(ch::DaqChannels) = ch.devname
 devtype(ch::DaqChannels) = ch.devtype
 
+function numchannels end
+
+
 "Return the number of channels of an input device"
 numchannels(ch::DaqChannels) = length(ch.channels)
+
+function daqchannels end
 
 "Return channel names of every configure channel"
 daqchannels(ch::DaqChannels) = ch.channels
@@ -138,4 +144,48 @@ physchans(ch::DaqChannels) = ch.physchans
 import Base.getindex
 getindex(ch::DaqChannels, s::AbstractString) = ch.chanmap[s]
 getindex(ch::DaqChannels, idx::Integer) = ch.channels[idx]
+
+"""
+`chanslice(ch::DaqChannels, idx::AbstractVector{<:Integer})`
+
+Returns a channel object containing the channels specified by `idx`.
+"""
+function chanslice(ch::DaqChannels{C,U}, idx::AbstractVector{<:Integer}) where {C,U}
+                                                                                
+    chans = ch.channels[idx]
+    chanmap = OrderedDict{String,Int}()
+    for (i,ch) in enumerate(chans)
+        chanmap[ch] = i
+    end
+
+    # Get the units:
+    if U <: AbstractVector
+        units = ch.units[idx]
+    elseif U <: AbstractString
+        units = ch.units
+    else
+        units = ""
+    end
+
+    return DaqChannels(ch.devname, ch.devtype, "", chans, chanmap, units)
+end
+
+
+function chanslice(ch::DaqChannels{C,U},
+                   chans::AbstractVector{<:AbstractString}) where {C,U}
+    
+    idx = [ch.chanmap[k] for k in chans]
+    return chanslice(ch, idx)
+end
+
+import Base.setindex!
+function setindex!(ch::DaqChannels, chan::AbstractString, idx::Integer)
+    chold = ch.channels[idx]
+    delete!(ch.chanmap, chold)
+    ch.chanmap[chan] = idx
+    ch.channels[idx] = chan
+    return chan                
+end
+
+
 

@@ -38,6 +38,13 @@ let
     @test measdata(X) == E
     @test X[] == E
 
+    @test X[2:3] == E[2:3,:]
+
+    X1 = chanslice(X, 2:3)
+
+    @test numchannels(X1) == 2
+    @test daqchannels(X1) == daqchannels(X)[2:3]
+    
     Eb = rand(nch, ns)
     Y = MeasData("test", "type", sa, Eb, chans)
 
