@@ -156,6 +156,13 @@ function daqchannels end
 
 
 """
+`daqchan(dev, i)`
+
+Return channel corresponding to index i.
+"""
+function daqchan end
+
+"""
 `daqpeek(dev, atend=true)`
 
 Returns data without messing data acquisition or data buffer.

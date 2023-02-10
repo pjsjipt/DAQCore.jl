@@ -1,7 +1,7 @@
 
 import DataStructures: OrderedDict
 export AbstractDaqChannels, DaqChannels, numchannels, daqchannels, physchans
-export chanslice
+export chanslice, daqchan, chanindex
 
 
 mutable struct DaqChannels{C,U} <: AbstractDaqChannels
@@ -18,6 +18,10 @@ mutable struct DaqChannels{C,U} <: AbstractDaqChannels
     "Units of measurements"
     units::U
 end
+
+# We dont want to broadcast over DaqChannels objects
+Broadcast.broadcastable(ch::DaqChannels) = Ref(ch)
+
 """
 `DaqChannels(devname, devtype, channels::AbstractVector,  units, physchans)`
 `DaqChannels(devname, devtype, ch::Union{Symbol,Char,AbstractString}, nchans::Integer, units, physchans)`
@@ -105,11 +109,7 @@ function DaqChannels(devname, devtype, channels::AbstractVector,
     
     chans = string.(channels)
 
-    chanmap = OrderedDict{String,Int}()
-
-    for (i,v) in enumerate(chans)
-        chanmap[v] = Int(i)
-    end
+    chanmap = chanlist2map(chans)
 
     return DaqChannels(devname, devtype, physchans, chans, chanmap, units)
 end
@@ -121,19 +121,36 @@ function DaqChannels(devname, devtype, ch::Union{Symbol,Char,AbstractString},
     return DaqChannels(devname, devtype, chans, units, physchans)
 end
 
+DaqChannels(channels::AbstractVector) = DaqChannels("", "", channels, "", "")
+DaqChannels(N::Integer) = DaqChannels("", "", 1:N, "", "")
 
-                     
+
+"""
+`chanlist2map(chans)`
+
+Turns a list of channel names into a map from
+channel name (string) to channel index (integer).
+
+If there are repeated channel names, unknown behaviour.
+"""
+function chanlist2map(chans::AbstractVector{<:AbstractString}, ::Type{TD}=OrderedDict) where {TD <: AbstractDict}
+    chanmap = TD{String,Int}()
+    for (i,v) in enumerate(chans)
+        chanmap[v] = i
+    end
+    return chanmap
+end
+
+        
 
 devname(ch::DaqChannels) = ch.devname
 devtype(ch::DaqChannels) = ch.devtype
 
-function numchannels end
 
 
 "Return the number of channels of an input device"
 numchannels(ch::DaqChannels) = length(ch.channels)
 
-function daqchannels end
 
 "Return channel names of every configure channel"
 daqchannels(ch::DaqChannels) = ch.channels
@@ -187,5 +204,56 @@ function setindex!(ch::DaqChannels, chan::AbstractString, idx::Integer)
     return chan                
 end
 
+daqchan(ch::DaqChannels, i::Integer) = ch.channels[i]
+
+"""
+`chanindex(ch, chan)`
+
+Returns the index of channel `chan`
+"""
+chanindex(ch::DaqChannels, chan::AbstractString) = ch.chanmap[chan]
+
+
+
+# We can use other structures as channels.
+# An integer can be used: it just means that the channels are a range from 1:N
+# An array of strings can also be used. Or an array of integers
+
+numchannels(N::Integer) = N
+daqchannels(N::Integer) = string.(1:N)
+
+numchannels(ch::AbstractVector) = length(ch)
+daqchannels(ch::AbstractVector{<:AbstractString}) = ch
+daqchannels(ch::AbstractVector{<:Integer}) = string.(ch)
+
+chanslice(ch::Integer, chans) = (1:ch)[chans]
+chanslice(ch::AbstractVector, chans) = ch[chans]
+
+daqchan(N::Integer, i::Integer) = (i <= N) ? string(i) : error("Channel $i not available in $N channels!")
+
+daqchan(ch::AbstractVector{<:AbstractString}, i::Integer) = ch[i]
+daqchan(ch::AbstractVector, i::Integer) = string(ch[i])
+
+function chanindex(N::Integer, chan::AbstractString)
+    ichan = parse(Int, chan)
+    return chaindex(N, ichan)
+end
+
+chanindex(N::Integer, i::Integer) = (1 ≤ i ≤ N) ? ichan : error("Channel $chan not available in range 1:$N!")
+
+chanindex(ch::AbstractVector{<:Integer}, chan::AbstractString) = chanindex(ch, parse(Int, chan))
+
+function chanindex(ch::AbstractVector{<:Integer}, chan::Integer)
+    idx = findfirst(isequal(chan), ch)
+    return !isnothing(idx) ? idx : error("Channel $chan not found!")
+end
+
+function chanindex(ch::AbstractVector{<:AbstractString}, chan::AbstractString)
+    idx = findfirst(isequal(chan), ch)
+
+    return !isnothing(idx) ? idx : error("Channel $chan not found!")
+end
+    
+                               
 
 
