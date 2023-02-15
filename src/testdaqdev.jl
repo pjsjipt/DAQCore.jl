@@ -49,7 +49,7 @@ Creates a test device, useful for testing stuff.
 """
 function TestDaq(devname)
 
-    chans = DaqChannels(devname, "TestDaq", String[])
+    chans = DaqChannels(String[], "")
     task = DaqTask()
     rate = 100.0
     nsamples = 10

@@ -4,28 +4,21 @@ export AbstractDaqChannels, DaqChannels, numchannels, daqchannels, physchans
 export chanslice, daqchan, chanindex
 
 
-mutable struct DaqChannels{C,U} <: AbstractDaqChannels
-    "Device name that contains the channels"
-    devname::String
-    "Type of device containing the channels"
-    devtype::String
+mutable struct DaqChannels{C} <: AbstractDaqChannels
     "Physical designation of the channels"
     physchans::C
     "Names of the channels"
     channels::Vector{String}
     "Mapping of channel names to index"
     chanmap::OrderedDict{String,Int}
-    "Units of measurements"
-    units::U
 end
 
 # We dont want to broadcast over DaqChannels objects
 Broadcast.broadcastable(ch::DaqChannels) = Ref(ch)
 
 """
-`DaqChannels(devname, devtype, channels::AbstractVector,  units, physchans)`
-`DaqChannels(devname, devtype, ch::Union{Symbol,Char,AbstractString}, nchans::Integer, units, physchans)`
-`DaqChannels(devname, devtype, physchans, channels::AbstractVector)`
+`DaqChannels(channels::AbstractVector,  physchans)`
+`DaqChannels(ch::Union{Symbol,Char,AbstractString}, nchans::Integer, physchans)`
 
 Creates channel definition data structures for DAQ systems.
 
@@ -33,10 +26,6 @@ Usually, each input device can acquire data in different channels. Each channel 
 name (`String`) and an index, usually this index refers to the row of the matrix
 containing data acquired. The name and/or index can be used to refer the a specific
 channel of an input device.
-
-As is the case almost everything in the `DAQCore` ecossystem, a `DaqChannel` has a
-`devname` and a `devtype`. In this specific case, this refers to the device and device type
-that is acquiring data.
 
 The names of the channels is given by field `channels` and
 `chanmap` is used to retrieve the channel index from its name.
@@ -47,11 +36,6 @@ each channel is referenced by something like "dev1/ai3". While it is clear what 
  analog input channel 3 from device 1, it is not a very nice reference.
 These channel definitions are stored for reading and writing purpososes. The exact format
 of the `physchans` will be device specific.
-
-When acquiring data, unit information should be available as well. Depending on
-the input device, each channel can have different units our the same. The units might
-be a string, a `Unitful` unit or an integer refering to a table in the device's manual.
-As such, the `units` field has a parametric type that will be device specific.
 
 Method [`numchannels`](@ref) return the number of channels configure and [`daqchannels`](@ref)
 returns the names of the channels. Methods [`getindex`](@ref) were implemented so that the index
@@ -64,8 +48,6 @@ inheriting `AbstractDaqChannels` can be implemented.
 
 ## Arguments
 
- * `devname`: A string defining the device name in `DAQJulia`
- * `devtype`: A string defining the device type
  * `physchans`: Physical definition of the channels as used in the device driver
  * `channels`: Vector with the name used by DAQJulia of each channel.
  * `ch`: A string used to prefix the index of the channels to get the channel names.
@@ -73,8 +55,8 @@ inheriting `AbstractDaqChannels` can be implemented.
 
 ## Examples
 ```julia-repl
-julia> ch = DaqChannels("test", "TestDevice", "E", 4)
-DaqChannels{String, String}("test", "TestDevice", "", ["E1", "E2", "E3", "E4"], OrderedCollections.OrderedDict("E1" => 1, "E2" => 2, "E3" => 3, "E4" => 4), "")
+julia> ch = DaqChannels("E", 4)
+DaqChannels{String}("test", "TestDevice", "", ["E1", "E2", "E3", "E4"], OrderedCollections.OrderedDict("E1" => 1, "E2" => 2, "E3" => 3, "E4" => 4), "")
 
 julia> numchannels(ch)
 4
@@ -86,8 +68,8 @@ julia> daqchannels(ch)
  "E3"
  "E4"
 
-julia> ch2 = DaqChannels("test", "TestDevice", ["E01", "E02", "E03", "E04"], "V", "dev1/ai0:3")
-DaqChannels{String, String}("test", "TestDevice", "dev1/ai0:3", ["E01", "E02", "E03", "E04"], OrderedCollections.OrderedDict("E01" => 1, "E02" => 2, "E03" => 3, "E04" => 4), "V")
+julia> ch2 = DaqChannels(["E01", "E02", "E03", "E04"], "dev1/ai0:3")
+DaqChannels{String}("dev1/ai0:3", ["E01", "E02", "E03", "E04"], OrderedCollections.OrderedDict("E01" => 1, "E02" => 2, "E03" => 3, "E04" => 4))
 
 julia> numchannels(ch2)
 4
@@ -103,26 +85,25 @@ julia> physchans(ch2)
 "dev1/ai0:3"
 ```
 """
-function DaqChannels(devname, devtype, channels::AbstractVector,
-                     units="", physchans="")
+function DaqChannels(channels::AbstractVector, physchans="")
     nch = length(channels)
     
     chans = string.(channels)
 
     chanmap = chanlist2map(chans)
 
-    return DaqChannels(devname, devtype, physchans, chans, chanmap, units)
+    return DaqChannels(physchans, chans, chanmap)
 end
 import Base.*
-function DaqChannels(devname, devtype, ch::Union{Symbol,Char,AbstractString},
-                     nchans::Integer, units="", physchans="")
+function DaqChannels(ch::Union{Symbol,Char,AbstractString},
+                     nchans::Integer, physchans="")
     nd = numdigits(nchans) 
     chans = [string(ch, s) for s in numstring.(1:nchans, nd)]
-    return DaqChannels(devname, devtype, chans, units, physchans)
+    return DaqChannels(chans, physchans)
 end
 
-DaqChannels(channels::AbstractVector) = DaqChannels("", "", channels, "", "")
-DaqChannels(N::Integer) = DaqChannels("", "", 1:N, "", "")
+DaqChannels(channels::AbstractVector) = DaqChannels(channels, "")
+DaqChannels(N::Integer) = DaqChannels(1:N, "")
 
 
 """
@@ -142,10 +123,6 @@ function chanlist2map(chans::AbstractVector{<:AbstractString}, ::Type{TD}=Ordere
 end
 
         
-
-devname(ch::DaqChannels) = ch.devname
-devtype(ch::DaqChannels) = ch.devtype
-
 
 
 "Return the number of channels of an input device"
@@ -167,7 +144,7 @@ getindex(ch::DaqChannels, idx::Integer) = ch.channels[idx]
 
 Returns a channel object containing the channels specified by `idx`.
 """
-function chanslice(ch::DaqChannels{C,U}, idx::AbstractVector{<:Integer}) where {C,U}
+function chanslice(ch::DaqChannels{C}, idx::AbstractVector{<:Integer}) where {C}
                                                                                 
     chans = ch.channels[idx]
     chanmap = OrderedDict{String,Int}()
@@ -175,21 +152,12 @@ function chanslice(ch::DaqChannels{C,U}, idx::AbstractVector{<:Integer}) where {
         chanmap[ch] = i
     end
 
-    # Get the units:
-    if U <: AbstractVector
-        units = ch.units[idx]
-    elseif U <: AbstractString
-        units = ch.units
-    else
-        units = ""
-    end
-
-    return DaqChannels(ch.devname, ch.devtype, "", chans, chanmap, units)
+    return DaqChannels("", chans, chanmap)
 end
 
 
-function chanslice(ch::DaqChannels{C,U},
-                   chans::AbstractVector{<:AbstractString}) where {C,U}
+function chanslice(ch::DaqChannels{C},
+                   chans::AbstractVector{<:AbstractString}) where {C}
     
     idx = [ch.chanmap[k] for k in chans]
     return chanslice(ch, idx)

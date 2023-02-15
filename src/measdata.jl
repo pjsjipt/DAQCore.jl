@@ -6,7 +6,7 @@ export MeasData, measdata, samplingrate
 abstract type AbstractMeasData end
 
 
-mutable struct MeasData{T,AT,S<:AbstractDaqSampling,
+mutable struct MeasData{T,AT<:AbstractMatrix{T},S<:AbstractDaqSampling,
                         CH<:AbstractDaqChannels} <: AbstractMeasData
     "Device that generated the data"
     devname::String
@@ -18,10 +18,12 @@ mutable struct MeasData{T,AT,S<:AbstractDaqSampling,
     data::AT
     "Channel Information"
     chans::CH
+    "Units of each channel"
+    units::Vector{String}
 end
 
 """
-`MeasData(devname, devtype, sampling, data, chans)`
+`MeasData(devname, devtype, sampling, data, chans, units)`
 
 Structure to store data acquired from a DAQ device. It also stores metadata related to 
 the DAQ device, data acquisition process and daq channels.
@@ -50,7 +52,7 @@ for sampling information (usually [`DaqSamplingRate`](@ref)  or [`DaqSamplingTim
 ## Example
 
 ```julia-repl
-julia> ch = DaqChannels("test", "TestDevice", "E", 4)
+julia> ch = DaqChannels("E", 4)
 DaqChannels{String, String}("test", "TestDevice", "", ["E1", "E2", "E3", "E4"], OrderedCollections.OrderedDict("E1" => 1, "E2" => 2, "E3" => 3, "E4" => 4), "")
 
 julia> s = DaqSamplingRate(1.0, 5, now())
@@ -104,7 +106,7 @@ julia> X["E2",1]
 """
 function MeasData(devname, devtype, sampling::S,
                   data::AbstractMatrix{T},
-                  chans::CH) where {T,S<:AbstractDaqSampling,
+                  chans::CH, units::Vector{String}) where {T,S<:AbstractDaqSampling,
                                     CH<:AbstractDaqChannels}
     
     nch = size(data, 1)
@@ -115,8 +117,16 @@ function MeasData(devname, devtype, sampling::S,
     numsamples(sampling) == size(data,2) ||
         error("Number of samples in sampling different from the number of lines of data array")
     
-    MeasData{T,typeof(data),S,CH}(devname, devtype, sampling, data, chans)
+    MeasData{T,typeof(data),S,CH}(devname, devtype, sampling, data, chans, units)
 end
+
+MeasData(devname, devtype, sampling, data, chans, units::AbstractString) =
+    MeasData(devname, devtype, sampling, data, chans,
+             [string(units) for i in 1:numchannels(chans)])
+
+MeasData(devname, devtype, sampling, data, chans) =
+    MeasData(devname, devtype, sampling, data, chans,
+             ["" for i in 1:numchannels(chans)])
 
 
 numsamples(d::MeasData{T,AT,S,CH}) where {T,AT<:AbstractMatrix{T},S,CH} =
@@ -195,3 +205,4 @@ import Base.size
 size(d::MeasData) = size(d.data)
 size(d::MeasData, idx) = size(d.data, idx)
 
+daqunits(d::MeasData) = d.units
