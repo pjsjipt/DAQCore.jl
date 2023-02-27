@@ -218,4 +218,4 @@ size(d::MeasData) = size(d.data)
 size(d::MeasData, idx) = size(d.data, idx)
 
 daqunits(d::MeasData) = d.units
-daqunit(d::MeasData, ch) = d.units[chanindx(d.chans, ch)]
+daqunit(d::MeasData, ch) = d.units[chanindex(d.chans, ch)]

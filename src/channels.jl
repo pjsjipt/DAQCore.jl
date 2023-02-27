@@ -179,7 +179,7 @@ daqchan(ch::DaqChannels, i::Integer) = ch.channels[i]
 Returns the index of channel `chan`
 """
 chanindex(ch::DaqChannels, chan::AbstractString) = ch.chanmap[chan]
-
+chanindex(ch::DaqChannels, chan::Integer) = chan
 
 
 # We can use other structures as channels.
