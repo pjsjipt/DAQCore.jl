@@ -37,13 +37,14 @@ mutable struct TestDaq <: AbstractInputDev
     signal::Vector{TestSignal{Float64}}
     "Buffer to store the data"
     E::Matrix{Float64}
+    units::Vector{String}
 end
 
 devname(dev::TestDaq) = dev.devname
 devtype(dev::TestDaq) = "TestDaq"
 
 """
-`TestDaq(devname, nchans; channames="E")`
+`TestDaq(devname)`
 
 Creates a test device, useful for testing stuff.
 """
@@ -57,7 +58,7 @@ function TestDaq(devname)
                        rate=100.0)
     signal = TestSignal{Float64}[]
     E = zeros(0,0)
-    return TestDaq(devname, chans, task, config, signal, E)
+    return TestDaq(devname, chans, task, config, signal, E, String[])
 end
 
 numchannels(dev::TestDaq) = numchannels(dev.chans)
@@ -67,37 +68,40 @@ daqchannels(dev::TestDaq) = daqchannels(dev.chans)
 
 
     
-function daqaddinput(dev::TestDaq, chans::Vector{String}, signal::Vector{TestSignal{Float64}})
+function daqaddinput(dev::TestDaq, chans::Vector{String}, signal::Vector{TestSignal{Float64}}; units="V")
 
     if length(chans) != length(signal)
         error("Number of channels should be the same as the number of signals")
     end
 
-    channels = DaqChannels(devname(dev), devtype(dev), chans, "", "")
-
+    channels = DaqChannels(chans, "")
+    
     dev.chans = channels
     dev.signal = signal
+
+    nchans = length(chans)
+    dev.units = fill(units, nchans)
     return
     
 end
 
 function daqaddinput(dev::TestDaq, chans::Vector{String};
-                    amp=1.0, freq=10.0, offset=1.0)
+                    amp=1.0, freq=10.0, offset=1.0, units="V")
     nch = length(chans)
     phase = range(0.0, 2π, length=nch+1)[1:end-1]
     signals = [TestSignal(amp, freq, ϕ, offset) for ϕ in phase]
-    daqaddinput(dev, chans, signals)
+    daqaddinput(dev, chans, signals, units=units)
 end
 
 
 function daqaddinput(dev::TestDaq, nchans::Integer;
-                     channames="E", amp=1.0, freq=10.0, offset=1.0)
+                     channames="E", amp=1.0, freq=10.0, offset=1.0, units="V")
     nd = numdigits(nchans)
     chans = [string(channames, numstring(i, nd)) for i in 1:nchans]
     phase = range(0.0, 2π, length=nchans+1)[1:end-1]
     signals = [TestSignal(amp, freq, ϕ, offset) for ϕ in phase]
     
-    return daqaddinput(dev, chans, signals)
+    return daqaddinput(dev, chans, signals, units=units)
 end
 
                  
@@ -171,7 +175,7 @@ function daqacquire(dev::TestDaq)
     cleartask!(dev.task)
     filldata!(dev)
     println(typeof(sampling))
-    return MeasData(devname(dev), devtype(dev), sampling, dev.E, dev.chans)
+    return MeasData(devname(dev), devtype(dev), sampling, dev.E, dev.chans, dev.units)
 end
 
 

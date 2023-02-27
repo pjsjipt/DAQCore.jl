@@ -64,6 +64,6 @@ let
     @test chanindex(["E1", "E2", "E3"], "E2") == 2
     @test chanslice(["E1", "E2", "E3"], 2:3) == ["E2", "E3"]
     @test chanslice(["E1", "E2", "E3"], ["E3"]) == ["E3"]
-    @test chanslice(["E1", "E2", "E3"], ["E2", "E3"]) == ["E2"," E3"]
+    @test chanslice(["E1", "E2", "E3"], ["E2", "E3"]) == ["E2","E3"]
     
 end

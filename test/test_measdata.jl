@@ -4,7 +4,7 @@ using Dates
 let
     # Let's build get some 4 channels with units volts:
     nch = 4 # Number of channels
-    chans = DaqChannels("test", "type", "E", nch, "V")
+    chans = DaqChannels("E", nch)
 
     # Let's build some data
     ns = 10 # Number of samples
@@ -26,7 +26,7 @@ let
     @test numsamples(X) == ns
     @test numchannels(X) == nch
     @test daqchannels(X) == daqchannels(chans)
-    
+
     for i in 1:nch
         @test X[i] == fill(ee[i], ns)
     end
@@ -58,5 +58,28 @@ let
     @test Y[["E1","E2"],1] == Eb[1:2,1]
     @test Y[["E1","E2"],5:10] == Eb[1:2,5:10]
         
+
+    X = MeasData("test", "type", sa, E)
+
+    @test devname(X) == "test"
+    @test devtype(X) == "type"
+
+    @test daqtime(X) == tinit
+    @test numsamples(X) == ns
+    @test numchannels(X) == nch
+    @test daqchannels(X) == ["1", "2", "3", "4"]
+
+    for i in 1:nch
+        @test X[i] == fill(ee[i], ns)
+    end
+
+    for (i,ch) in enumerate(daqchannels(X))
+        @test X[ch] == fill(ee[i], ns)
+    end
+
+    @test measdata(X) == E
+    @test X[] == E
+
+    @test X[2:3] == E[2:3,:]
 
 end

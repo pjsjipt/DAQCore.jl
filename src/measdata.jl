@@ -6,8 +6,8 @@ export MeasData, measdata, samplingrate, daqunits, daqunit
 abstract type AbstractMeasData end
 
 
-mutable struct MeasData{T,AT<:AbstractMatrix{T},S<:AbstractDaqSampling,
-                        CH<:AbstractDaqChannels} <: AbstractMeasData
+mutable struct MeasData{T,AT<:AbstractMatrix{T},
+                        S<:AbstractDaqSampling,CH} <: AbstractMeasData
     "Device that generated the data"
     devname::String
     "Type of device"
@@ -108,7 +108,7 @@ julia> X["E2",1]
 function MeasData(devname, devtype, sampling::S,
                   data::AbstractMatrix{T},
                   chans::CH, units::Vector{String}) where {T,S<:AbstractDaqSampling,
-                                    CH<:AbstractDaqChannels}
+                                                           CH}
     
     nch = size(data, 1)
     
@@ -125,10 +125,16 @@ MeasData(devname, devtype, sampling, data, chans, units::AbstractString) =
     MeasData(devname, devtype, sampling, data, chans,
              [string(units) for i in 1:numchannels(chans)])
 
+
 MeasData(devname, devtype, sampling, data, chans) =
     MeasData(devname, devtype, sampling, data, chans,
              ["" for i in 1:numchannels(chans)])
 
+function MeasData(devname, devtype, sampling::S,
+                  data::AbstractMatrix{T}) where {T,S<:AbstractDaqSampling} 
+    nchans = size(data,1)
+    return MeasData(devname, devtype, sampling, data, nchans, fill("",4))
+end
 
 numsamples(d::MeasData{T,AT,S,CH}) where {T,AT<:AbstractMatrix{T},S,CH} =
     size(d.data,2)
@@ -159,51 +165,48 @@ numchannels(d::MeasData) = numchannels(d.chans)
 import Base.getindex
 
 
-getindex(d::MeasData{T,AbstractMatrix{T}}, i::Integer, k::Integer) where {T} =
+getindex(d::MeasData{T,AT}, i::Integer, k::Integer) where {T,AT<:AbstractMatrix{T}} =
     d.data[i,k]
 
-getindex(d::MeasData{T,AbstractArray{T}}, idx...) where {T} =
+
+getindex(d::MeasData{T,AT}, idx...) where {T,AT<:AbstractArray{T}} =
     view(d.data, idx...)
 
 "Access the data in channel name `ch`"
-getindex(d::MeasData{T,AbstractMatrix{T}}, ch::AbstractString) where {T} =
+getindex(d::MeasData{T,AT}, ch::AbstractString) where {T,AT<:AbstractMatrix{T}} =
     view(d.data,chanindex(d.chans, ch),:)
 
 "Access the data in channel index `i`"
-getindex(d::MeasData{T,AbstractMatrix{T}}, i::Integer) where {T} =
+getindex(d::MeasData{T,AT}, i::Int) where {T,AT<:AbstractMatrix{T}} =
     view(d.data, i, :)
 
 "Access the data in channel name `ch` at time index `k`"
-getindex(d::MeasData{T,AbstractMatrix{T}}, ch::AbstractString,k::Integer) where {T} =
-    d.data[chanindex(d.chans, ch),k]
+getindex(d::MeasData{T,AT}, ch::AbstractString,
+         k::Integer) where {T,AT<:AbstractMatrix{T}} =
+             d.data[chanindex(d.chans, ch),k]
 
-function getindex(d::MeasData{T,AbstractMatrix{T}},
-                  chans::AbstractVector{<:AbstractString}) where {T}
+function getindex(d::MeasData{T,AT},
+                  chans::AbstractVector{<:AbstractString}) where {T,AT<:AbstractMatrix{T}}
     view(d.data, [chanindex(d.chans, ch) for ch in chans], :)
 end
 
-function getindex(d::MeasData{T,AbstractMatrix{T}},
-                  chans::AbstractVector{<:AbstractString}, k) where {T}
+function getindex(d::MeasData{T,AT}, chans::AbstractVector{<:AbstractString},
+                  k) where {T,AT<:AbstractMatrix{T}}
     view(d.data, [chanindex(d.chans, ch) for ch in chans], k)
 end
 
-function getindex(d::MeasData{T,AbstractMatrix{T}},
-                  chans::AbstractVector{<:Integer}) where {T}
+function getindex(d::MeasData{T,AT},
+                  chans::AbstractVector{<:Integer}) where {T,AT<:AbstractMatrix{T}}
     view(d.data, chans, :)
 end
 
+
 getindex(d::MeasData) = d.data
 
-getindex(d::MeasData{T,<:AbstractMatrix{T}},
-         idx::AbstractVector{<:Integer}) where {T} =
-    view(d.data, idx, :)
 
-getindex(d::MeasData{T,<:AbstractMatrix{T}},
-         idx::AbstractVector{<:AbstractString}) where {T} =
-    view(d.data, [d.chans[s] for s in idx], :)
 
-function chanslice(d::MeasData{T,<:AbstractMatrix{T}},
-                   idx::AbstractVector) where {T}
+function chanslice(d::MeasData{T,AT},
+                   idx::AbstractVector) where {T,AT<:AbstractMatrix{T}}
     ch = chanslice(d.chans, idx)
     MeasData(d.devname, d.devtype, d.sampling, d.data[idx,:], ch)
 end
