@@ -103,7 +103,7 @@ getindex(dev::DeviceSet, dname::AbstractString) = dev.devices[dev.devdict[dname]
 numchannels(d::DeviceSet) = sum(numchannels(d) for d in d.devices)
 
 function daqchannels(d::DeviceSet)
-    chans = Tuple{String,Int}}[]
+    chans = Tuple{String,Int}[]
     for dev in d.devices
         devchans = daqchannels(dev)
         dname = devname(dev)

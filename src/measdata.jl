@@ -1,6 +1,6 @@
 
 using Dates
-export MeasData, measdata, samplingrate
+export MeasData, measdata, samplingrate, daqunits, daqunit
 
 "Base type for measurement data sets"
 abstract type AbstractMeasData end
@@ -21,6 +21,7 @@ mutable struct MeasData{T,AT<:AbstractMatrix{T},S<:AbstractDaqSampling,
     "Units of each channel"
     units::Vector{String}
 end
+
 
 """
 `MeasData(devname, devtype, sampling, data, chans, units)`
@@ -157,29 +158,37 @@ numchannels(d::MeasData) = numchannels(d.chans)
 
 import Base.getindex
 
-getindex(d::MeasData, i::Integer, k::Integer) = d.data[i,k]
 
-getindex(d::MeasData, idx...) = view(d.data, idx...)
+getindex(d::MeasData{T,AbstractMatrix{T}}, i::Integer, k::Integer) where {T} =
+    d.data[i,k]
+
+getindex(d::MeasData{T,AbstractArray{T}}, idx...) where {T} =
+    view(d.data, idx...)
 
 "Access the data in channel name `ch`"
-getindex(d::MeasData,ch::AbstractString) = view(d.data,d.chans[ch],:)
+getindex(d::MeasData{T,AbstractMatrix{T}}, ch::AbstractString) where {T} =
+    view(d.data,chanindex(d.chans, ch),:)
 
 "Access the data in channel index `i`"
-getindex(d::MeasData, i::Integer)  = view(d.data, i, :)
+getindex(d::MeasData{T,AbstractMatrix{T}}, i::Integer) where {T} =
+    view(d.data, i, :)
 
 "Access the data in channel name `ch` at time index `k`"
-getindex(d::MeasData, ch::AbstractString,k::Integer) =
-    d.data[d.chans[ch],k]
+getindex(d::MeasData{T,AbstractMatrix{T}}, ch::AbstractString,k::Integer) where {T} =
+    d.data[chanindex(d.chans, ch),k]
 
-function getindex(d::MeasData, chans::AbstractVector{<:AbstractString})
-    view(d.data, [d.chans[ch] for ch in chans], :)
+function getindex(d::MeasData{T,AbstractMatrix{T}},
+                  chans::AbstractVector{<:AbstractString}) where {T}
+    view(d.data, [chanindex(d.chans, ch) for ch in chans], :)
 end
 
-function getindex(d::MeasData, chans::AbstractVector{<:AbstractString}, k)
-    view(d.data, [d.chans[ch] for ch in chans], k)
+function getindex(d::MeasData{T,AbstractMatrix{T}},
+                  chans::AbstractVector{<:AbstractString}, k) where {T}
+    view(d.data, [chanindex(d.chans, ch) for ch in chans], k)
 end
 
-function getindex(d::MeasData, chans::AbstractVector{<:Integer})
+function getindex(d::MeasData{T,AbstractMatrix{T}},
+                  chans::AbstractVector{<:Integer}) where {T}
     view(d.data, chans, :)
 end
 
@@ -196,7 +205,7 @@ getindex(d::MeasData{T,<:AbstractMatrix{T}},
 function chanslice(d::MeasData{T,<:AbstractMatrix{T}},
                    idx::AbstractVector) where {T}
     ch = chanslice(d.chans, idx)
-    MeasData(d.devname, d.devtype, d.sampling, d[idx], ch)
+    MeasData(d.devname, d.devtype, d.sampling, d.data[idx,:], ch)
 end
 
 
@@ -206,3 +215,4 @@ size(d::MeasData) = size(d.data)
 size(d::MeasData, idx) = size(d.data, idx)
 
 daqunits(d::MeasData) = d.units
+daqunit(d::MeasData, ch) = d.units[chanindx(d.chans, ch)]

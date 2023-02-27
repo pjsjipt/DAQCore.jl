@@ -102,7 +102,6 @@ function DaqChannels(ch::Union{Symbol,Char,AbstractString},
     return DaqChannels(chans, physchans)
 end
 
-DaqChannels(channels::AbstractVector) = DaqChannels(channels, "")
 DaqChannels(N::Integer) = DaqChannels(1:N, "")
 
 
@@ -195,7 +194,9 @@ daqchannels(ch::AbstractVector{<:AbstractString}) = ch
 daqchannels(ch::AbstractVector{<:Integer}) = string.(ch)
 
 chanslice(ch::Integer, chans) = (1:ch)[chans]
-chanslice(ch::AbstractVector, chans) = ch[chans]
+chanslice(ch::AbstractVector, chans::AbstractVector{<:Integer}) = ch[chans]
+chanslice(ch::AbstractVector, chans::AbstractVector{<:AbstractString}) =
+    ch[ [chanindex(ch, ichan) for ichan in chans] ]
 
 daqchan(N::Integer, i::Integer) = (i <= N) ? string(i) : error("Channel $i not available in $N channels!")
 
@@ -204,10 +205,10 @@ daqchan(ch::AbstractVector, i::Integer) = string(ch[i])
 
 function chanindex(N::Integer, chan::AbstractString)
     ichan = parse(Int, chan)
-    return chaindex(N, ichan)
+    return chanindex(N, ichan)
 end
 
-chanindex(N::Integer, i::Integer) = (1 ≤ i ≤ N) ? ichan : error("Channel $chan not available in range 1:$N!")
+chanindex(N::Integer, i::Integer) = (1 ≤ i ≤ N) ? i : error("Channel $chan not available in range 1:$N!")
 
 chanindex(ch::AbstractVector{<:Integer}, chan::AbstractString) = chanindex(ch, parse(Int, chan))
 
