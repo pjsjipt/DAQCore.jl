@@ -214,7 +214,7 @@ function movenext!(pts::ExperimentSetup)
     lp = lastpoint(pts)
     p = daqpoint(pts.points, lp+1) # Get the coordinates of last point
     pax = p[pts.idx]
-    moveto!(pts.odev, pax)
+    moveto!(pts.idx, pts.odev, pax)
     incpoint!(pts)
 
     if (lp+1) > numpoints(pts) # Last point
@@ -286,7 +286,7 @@ function movenext!(pts::ExperimentSetup{IDev,Pts,ODev}) where {IDev<:AbstractInp
         for  k in eachindex(pts.odev)
             ax = axesnames(pts.odev[k]) # Get the name of the axes
             a_next = [x_next[pts.parmap[aa]] for aa in ax]
-            moveto!(pts.odev[k], a_next)
+            moveto!(k, pts.odev[k], a_next)
         end
         pts.started = true
     else # It is not the first point
@@ -298,7 +298,7 @@ function movenext!(pts::ExperimentSetup{IDev,Pts,ODev}) where {IDev<:AbstractInp
 
             # We only need to move the device *if* the points have changed!
             if a_next != a_last
-                moveto!(pts.odev[k], a_next)
+                moveto!(k, pts.odev[k], a_next)
             end
         end
     end

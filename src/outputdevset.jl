@@ -46,7 +46,7 @@ julia> axesnames(dev)
 julia> numaxes(dev)
 2
 
-julia> moveto!(dev, [300, 45]) # Set fan speed to 300 RPM and turn the table to 45°
+julia> moveto!(1,dev, [300, 45]) # Set fan speed to 300 RPM and turn the table to 45°
 
 julia> devposition(dev1)
 1-element Vector{Float64}:
@@ -99,13 +99,13 @@ function axesnames(devices::OutputDevSet)
 end
 
 "Get the output devices s to `move` to a point given by the components of x"
-function moveto!(odevs::OutputDevSet, x)
+function moveto!(k, odevs::OutputDevSet, x)
     
     naxes = 0
     
     for dev in odevs.odev
         nx = numaxes(dev)
-        moveto!(dev, x[naxes+1:naxes+nx])
+        moveto!(k, dev, x[naxes+1:naxes+nx])
         naxes += nx
     end
     return
