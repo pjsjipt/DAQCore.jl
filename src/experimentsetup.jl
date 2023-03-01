@@ -214,7 +214,7 @@ function movenext!(pts::ExperimentSetup)
     lp = lastpoint(pts)
     p = daqpoint(pts.points, lp+1) # Get the coordinates of last point
     pax = p[pts.idx]
-    moveto!(pts.idx, pts.odev, pax)
+    moveto!(lp+1, pts.odev, pax)
     incpoint!(pts)
 
     if (lp+1) > numpoints(pts) # Last point
