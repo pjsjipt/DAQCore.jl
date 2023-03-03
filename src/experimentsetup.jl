@@ -58,26 +58,38 @@ julia> while movenext!(setup)
 [300.0]
 ```
 """
-mutable struct ExperimentSetup{IDev<:AbstractInputDev,Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentSetup
+mutable struct ExperimentSetup{IDev<:AbstractInputDev,ODev} <: AbstractExperimentSetup
     "Index of last point measured"
     lastpoint::Int
     "Has the experiment started?"
     started::Bool
     "Data Input Devices"
     idev::IDev
-    "Coordinates of points to be measured"
-    points::Pts
     "Output devices to set points"
     odev::ODev
-    "Mapping from parameters to axes names"
-    axmap::OrderedDict{String,String}
-    "Mapping from axes names to parameters"
-    parmap::OrderedDict{String,String}
-    "Index of each parameter corresponding to the ith axis"
-    idx::Vector{Int}
 end
 
+ExperimentSetup(idev, odev) = ExperimentSetup(0, false, idev, odev)
 
+"Return the input device of the `ExperimentSetup`"
+inputdevice(pts::ExperimentSetup) = pts.idev
+"Return the output device of the `ExperimentSetup`"
+outputdevice(pts::ExperimentSetup) = pts.odev
+
+
+daqpoints(pts::ExperimentSetup) = daqpoints(pts.odev)
+daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.odev, i)
+parameters(pts::ExperimentSetup) = parameters(pts.odev)
+numparams(pts::ExperimentSetup) = numparams(pts.odev)
+numpoints(pts::ExperimentSetup) = numpoints(pts.odev)
+
+daqchannels(pts::ExperimentSetup) = daqchannels(pts.idev)
+numchannels(pts::ExperimentSetup) = numchannels(pts.idev)
+
+
+function movenext! end
+function finishedpoints end
+function lastpoint end
 
 
 function setup_ap_map(axes, params, axmap1)
@@ -139,17 +151,29 @@ function setup_ap_map(axes, params)
 end
 
 
-
-function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
-                         odev::AbstractOutputDev, axmap::AbstractDict{String,String})
+mutable struct ExperimentActuator{Pts<:AbstractDaqPoints,ODev}
+    points::Pts
+    odev::ODev
+    "Mapping from parameters to axes names"
+    axmap::OrderedDict{String,String}
+    "Mapping from axes names to parameters"
+    parmap::OrderedDict{String,String}
+    "Index of each parameter corresponding to the ith axis"
+    idx::Vector{Int}
+end
 
     
+
+
+
+function ExperimentActuator(pts::AbstractDaqPoints, odev,
+                            axmap::AbstractDict{String,String})
     params = parameters(pts)
     axes = axesnames(odev)
     
     # Check compatibility and setup axes map
     axmap1, parmap, idx = setup_ap_map(axes, params, axmap)
-    return ExperimentSetup(0, false, idev, pts, odev, axmap1, parmap, idx)
+    return ExperimentActuator(pts, odev, axmap1, parmap, idx)
 end
 
 
@@ -231,19 +255,6 @@ end
 
 
 
-daqpoints(pts::ExperimentSetup) = daqpoints(pts.points)
-daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.points, i)
-parameters(pts::ExperimentSetup) = parameters(pts.points)
-numparams(pts::ExperimentSetup) = numparams(pts.points)
-numpoints(pts::ExperimentSetup) = numpoints(pts.points)
-
-axesnames(pts::ExperimentSetup) = axesnames(pts.odev)
-numaxes(pts::ExperimentSetup) = numaxes(pts.odev)
-
-"Return the input device of the `ExperimentSetup`"
-inputdevice(pts::ExperimentSetup) = pts.idev
-"Return the output device of the `ExperimentSetup`"
-outputdevice(pts::ExperimentSetup) = pts.odev
 
 
 """
