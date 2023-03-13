@@ -80,63 +80,6 @@ end
 
 
 
-function setup_ap_map(axes, params, axmap1)
-    p1 = unique(params)
-    a1 = unique(axes)
-
-    length(p1) != length(params) &&  error("Repeated parameters. Don't know how to handle this!")
-    length(a1) != length(axes) &&  error("Repeated axes. Don't know how to handle this!")
-
-    length(params) != length(axes) && error("The number of axes should be the same as the number of parameters!")
-
-    axmap = OrderedDict{String,String}()
-    pamap = OrderedDict{String,String}()
-
-    
-    # Every axe should be associated to a parameter.
-    # We map axes to parameters. The order is given by axes.
-    # We do this because this determines the order of acting
-    # on the output devices.
-    for a in axes
-        if a ∉ keys(axmap1)
-            error("Axis $a not mapped to a parameter")
-        end
-        p = axmap1[a]
-        if p ∉ values(axmap1)
-            error("Parameter $p not mapped to an axis!")
-        end
-        
-        p = axmap1[a]
-        axmap[a] = p
-        pamap[p] = a
-    end
-    param_idx = Dict{String,Int}()
-    for (i,p) in enumerate(params)
-        param_idx[p] = i
-    end
-
-    idx = zeros(Int,length(params))
-    for (i,a) in enumerate(axes)
-        p = axmap[a]
-        k = param_idx[p]
-        idx[i] = k
-    end
-    
-    return axmap, pamap, idx
-        
-end
-
-function setup_ap_map(axes, params)
-    np = length(params)
-    np != length(axes) && error("Incompatible length between parameters and axes!")
-
-    axmap = OrderedDict{String,String}()
-    for (a,p) in zip(axes, params)
-        axmap[a] = p
-    end
-
-    return setup_ap_map(axes, params, axmap)
-end
 
 
 
