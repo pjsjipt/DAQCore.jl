@@ -3,7 +3,7 @@
 export AbstractDaqPlan, DaqPlan, restartplan!
 
 
-abstract type AbstractDaqPlan
+abstract type AbstractDaqPlan end
 
 
 

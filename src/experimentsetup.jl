@@ -58,53 +58,27 @@ julia> while movenext!(setup)
 [300.0]
 ```
 """
-mutable struct ExperimentSetup{ODev,Pts<:AbstractDaqPoints,IDev<:AbstractInputDev} <: AbstractExperimentSetup
-    "Index of last point measured"
-    lastpoint::Int
-    "Has the experiment started?"
-    started::Bool
+mutable struct ExperimentSetup{ODev<:AbstractDaqPlan,IDev<:AbstractInputDev,Filter} <: AbstractExperimentSetup
     "Data Input Devices"
     idev::IDev
-    "Coordinates of points to be measured"
-    points::Pts
-    "Output devices to set points"
+    "Experiment Plan"
     odev::ODev
-    "Mapping from parameters to axes names"
-    axmap::OrderedDict{String,String}
-    "Mapping from axes names to parameters"
-    parmap::OrderedDict{String,String}
-    "Index of each parameter corresponding to the ith axis"
-    idx::Vector{Int}
+    "Data Filtering and processing"
+    filt::Filter
 end
 
 
 
 
 
-
-
-function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
-                         odev::AbstractOutputDev, axmap::AbstractDict{String,String})
-
-    
-    params = parameters(pts)
-    axes = axesnames(odev)
-    
-    # Check compatibility and setup axes map
-    axmap1, parmap, idx = setup_ap_map(axes, params, axmap)
-    return ExperimentSetup(0, false, idev, pts, odev, axmap1, parmap, idx)
-end
 
 
 function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
                          odev::AbstractOutputDev)
-
-    axmap = OrderedDict{String,String}()
-    for p in parameters(pts)
-        axmap[p] = p
-    end
-    return ExperimentSetup(idev, pts, odev, axmap)
+    
+    return ExperimentSetup(idev, DaqPlan(dev, pts), 1)
 end
+
 
 
 
@@ -119,21 +93,21 @@ there is no set number of points. In cases like this, a new method should be cre
 that check if the problem is done.
 
 """
-finishedpoints(pts::ExperimentSetup) = pts.lastpoint == numpoints(pts.points)
+finishedpoints(pts::ExperimentSetup) = finishedpoints(pts.odev)
 
 """
 `lastpoint(pts)`
 
 Return the index of the last point tested. Point `0` means that no points were tested.
 """
-lastpoint(pts::AbstractExperimentSetup) = pts.lastpoint
+lastpoint(pts::AbstractExperimentSetup) = lastpoint(dev.odev)
 
 """
-`incpoint(pts)`
+`incpoint!(pts)`
 
 Increment point counter.
 """
-incpoint!(pts::AbstractExperimentSetup) = pts.lastpoint += 1
+incpoint!(pts::AbstractExperimentSetup) = incpoint!(dev.odev)
 
 """
 `setpoint!(pts, i)`
@@ -143,36 +117,9 @@ Remember that the first point is 1 and therefore to restart things,
 the last point should be 0. 
 
 """
-setpoint!(pts::AbstractExperimentSetup, i) = pts.lastpoint = i-1  # Lastpoint
+setpoint!(pts::AbstractExperimentSetup, i) = setpoint!(pts.odev, i)
 
-"""
-`movenext!(pts)`
-
-Move to the next point. Basic interface to carry out an experiment.
-
-"""
-function movenext!(pts::ExperimentSetup)
-    finishedpoints(pts) && return false  # It is over.
-    
-    lp = lastpoint(pts)
-    p = daqpoint(pts.points, lp+1) # Get the coordinates of last point
-    pax = p[pts.idx]
-    moveto!(pts.odev, pax)
-    incpoint!(pts)
-
-    if (lp+1) > numpoints(pts) # Last point
-        pts.started = false
-        return false
-    else
-        return true # We moved, so we have not finished
-    end
-    
-
-    
-end
-
-
-
+movenext!(pts::ExperimentSetup) = movenext!(pts.odev)
 
 daqpoints(pts::ExperimentSetup) = daqpoints(pts.points)
 daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.points, i)
@@ -188,72 +135,4 @@ inputdevice(pts::ExperimentSetup) = pts.idev
 "Return the output device of the `ExperimentSetup`"
 outputdevice(pts::ExperimentSetup) = pts.odev
 
-
-"""
-`movenext!(setup)`
-
-Move to the next point in the experiment when dealing with [`OutputDevSet`](@ref) meta
-device sets. If the experiment point is not the first one, it will act on the output
-devices if the next point changed it.
-
-It would seem intuitive to just call [`devposition`](@ref) and check if we are moving
-but some devices provide approximate values that might not correspond to the
-exact position specified by points. 
-
-"""
-function movenext!(pts::ExperimentSetup{ODev,Pts,IDev}) where {IDev<:AbstractInputDev,
-                                                               Pts<:AbstractDaqPoints,
-                                                               ODev<:OutputDevSet}
-    # Have we finished the measurements?
-    finishedpoints(pts) && return false  # It is over.
-
-    lp = lastpoint(pts) # Index of last point tested
-    x_next = daqpoint(pts.points, lp+1) # Coordinates to the next point
-    has_started = pts.started # Have we started moving yet?
-    
-    #=
-    When the output device is an `OutputDevSet`, each device should move independently.
-    Often this movement takes some time so it should be done only if necessary.
-    If the next point doesn't move some of the devices, then it shouldn't move.
-    An extreme situation happens when a device is manual, then moving every device
-    would imply waiting for manual input on every point, defeating any automation
-    on all other devices.
-
-    The idea is that devices that are more "difficult" to move (take longer, require
-    manual intervential, cost more), should be moved least of all. So the points with
-    coordinates corresponding to these "more expensive" devices should be programmed
-    to move less often.
-    
-    =#
-    if !has_started    # If it is the first point, move everything to it.
-        for  k in eachindex(pts.odev)
-            ax = axesnames(pts.odev[k]) # Get the name of the axes
-            a_next = [x_next[pts.parmap[aa]] for aa in ax]
-            moveto!(pts.odev[k], a_next)
-        end
-        pts.started = true
-    else # It is not the first point
-        x_last = daqpoint(pts, lp)
-        for k in eachindex(pts.odev)
-            ax = axesnames(pts.odev[k]) # Get the name of the axes
-            a_next = [x_next[pts.parmap[aa]] for aa in ax]
-            a_last = [x_last[pts.parmap[aa]] for aa in ax]
-
-            # We only need to move the device *if* the points have changed!
-            if a_next != a_last
-                moveto!(pts.odev[k], a_next)
-            end
-        end
-    end
-    incpoint!(pts)
-
-    if (lp+1) == numpoints(pts) # Last point
-        pts.started = false
-        return false
-    else
-        return true # We moved, so we have not finished
-    end
-    
-    
-end
 
