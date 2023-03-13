@@ -1,8 +1,8 @@
 
 # Setup experimental points
 
-export ExperimentSetup, lastpoint, incpoint!, setpoint!, movenext!
-export finishedpoints, inputdevice, outputdevice
+export ExperimentSetup
+export inputdevice, outputdevice
 
 """
 `ExperimentSetup(idev, pts, odev)`
@@ -58,11 +58,11 @@ julia> while movenext!(setup)
 [300.0]
 ```
 """
-mutable struct ExperimentSetup{ODev<:AbstractDaqPlan,IDev<:AbstractInputDev,Filter} <: AbstractExperimentSetup
+mutable struct ExperimentSetup{Plan<:AbstractDaqPlan,IDev<:AbstractInputDev,Filter} <: AbstractExperimentSetup
     "Data Input Devices"
     idev::IDev
     "Experiment Plan"
-    odev::ODev
+    plan::Plan
     "Data Filtering and processing"
     filt::Filter
 end
@@ -76,12 +76,12 @@ end
 function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
                          odev::AbstractOutputDev)
     
-    return ExperimentSetup(idev, DaqPlan(dev, pts), 1)
+    return ExperimentSetup(idev, DaqPlan(dev, pts), nothing)
 end
 
 
 
-
+startplan!(pts::AbstractExperimentSetup) = startplan!(pts.plan)
 """
 `finishedpoints(pts)`
 
@@ -93,21 +93,21 @@ there is no set number of points. In cases like this, a new method should be cre
 that check if the problem is done.
 
 """
-finishedpoints(pts::ExperimentSetup) = finishedpoints(pts.odev)
+finishedpoints(pts::ExperimentSetup) = finishedpoints(pts.plan)
 
 """
 `lastpoint(pts)`
 
 Return the index of the last point tested. Point `0` means that no points were tested.
 """
-lastpoint(pts::AbstractExperimentSetup) = lastpoint(dev.odev)
+lastpoint(pts::AbstractExperimentSetup) = lastpoint(dev.plan)
 
 """
 `incpoint!(pts)`
 
 Increment point counter.
 """
-incpoint!(pts::AbstractExperimentSetup) = incpoint!(dev.odev)
+incpoint!(pts::AbstractExperimentSetup) = incpoint!(dev.plan)
 
 """
 `setpoint!(pts, i)`
@@ -117,9 +117,9 @@ Remember that the first point is 1 and therefore to restart things,
 the last point should be 0. 
 
 """
-setpoint!(pts::AbstractExperimentSetup, i) = setpoint!(pts.odev, i)
+setpoint!(pts::AbstractExperimentSetup, i) = setpoint!(pts.plan, i)
 
-movenext!(pts::ExperimentSetup) = movenext!(pts.odev)
+movenext!(pts::ExperimentSetup) = movenext!(pts.plan)
 
 daqpoints(pts::ExperimentSetup) = daqpoints(pts.points)
 daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.points, i)
@@ -127,12 +127,12 @@ parameters(pts::ExperimentSetup) = parameters(pts.points)
 numparams(pts::ExperimentSetup) = numparams(pts.points)
 numpoints(pts::ExperimentSetup) = numpoints(pts.points)
 
-axesnames(pts::ExperimentSetup) = axesnames(pts.odev)
-numaxes(pts::ExperimentSetup) = numaxes(pts.odev)
+axesnames(pts::ExperimentSetup) = axesnames(pts.plan)
+numaxes(pts::ExperimentSetup) = numaxes(pts.plan)
 
 "Return the input device of the `ExperimentSetup`"
 inputdevice(pts::ExperimentSetup) = pts.idev
 "Return the output device of the `ExperimentSetup`"
-outputdevice(pts::ExperimentSetup) = pts.odev
+outputdevice(pts::ExperimentSetup) = pts.plan
 
 

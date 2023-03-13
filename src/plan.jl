@@ -1,23 +1,13 @@
 # Experiment Plan
 #
-export AbstractDaqPlan, DaqPlan, restartplan!
+export AbstractDaqPlan, DaqPlan, startplan!
+export lastpoint, incpoint!, setpoint!, movenext!, finishedpoints
 
 
 abstract type AbstractDaqPlan end
 
 
 
-function setup_ap_map(axes, params)
-    np = length(params)
-    np != length(axes) && error("Incompatible length between parameters and axes!")
-
-    axmap = OrderedDict{String,String}()
-    for (a,p) in zip(axes, params)
-        axmap[a] = p
-    end
-
-    return setup_ap_map(axes, params, axmap)
-end
 
 mutable struct DaqPlan{ODev<:AbstractOutputDev,
                        Pts<:AbstractDaqPoints}
@@ -191,6 +181,17 @@ end
     idx::Vector{Int}
 =#
 
+function setup_ap_map(axes, params)
+    np = length(params)
+    np != length(axes) && error("Incompatible length between parameters and axes!")
+
+    axmap = OrderedDict{String,String}()
+    for (a,p) in zip(axes, params)
+        axmap[a] = p
+    end
+
+    return setup_ap_map(axes, params, axmap)
+end
 
 function setup_ap_map(axes, params, axmap1)
     p1 = unique(params)
