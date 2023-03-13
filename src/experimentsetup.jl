@@ -58,7 +58,7 @@ julia> while movenext!(setup)
 [300.0]
 ```
 """
-mutable struct ExperimentSetup{IDev<:AbstractInputDev,Pts<:AbstractDaqPoints,ODev<:AbstractOutputDev} <: AbstractExperimentSetup
+mutable struct ExperimentSetup{ODev,Pts<:AbstractDaqPoints,IDev<:AbstractInputDev} <: AbstractExperimentSetup
     "Index of last point measured"
     lastpoint::Int
     "Has the experiment started?"
@@ -258,7 +258,7 @@ but some devices provide approximate values that might not correspond to the
 exact position specified by points. 
 
 """
-function movenext!(pts::ExperimentSetup{IDev,Pts,ODev}) where {IDev<:AbstractInputDev,
+function movenext!(pts::ExperimentSetup{ODev,Pts,IDev}) where {IDev<:AbstractInputDev,
                                                                Pts<:AbstractDaqPoints,
                                                                ODev<:OutputDevSet}
     # Have we finished the measurements?
