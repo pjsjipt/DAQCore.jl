@@ -11,7 +11,7 @@ abstract type AbstractDaqPlan end
 
 
 mutable struct DaqPlan{ODev<:AbstractOutputDev,
-                       Pts<:AbstractDaqPoints}
+                       Pts<:AbstractDaqPoints} <: AbstractDaqPlan
     devname::String
     devtype::String
     lastpoint::Int

@@ -2,7 +2,7 @@
 # Setup experimental points
 
 export ExperimentSetup
-export inputdevice
+export inputdevice, daqplan
 
 """
 `ExperimentSetup(idev, pts, odev)`
@@ -121,11 +121,11 @@ setpoint!(pts::AbstractExperimentSetup, i) = setpoint!(pts.plan, i)
 
 movenext!(pts::ExperimentSetup) = movenext!(pts.plan)
 
-daqpoints(pts::ExperimentSetup) = daqpoints(pts.points)
-daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.points, i)
-parameters(pts::ExperimentSetup) = parameters(pts.points)
-numparams(pts::ExperimentSetup) = numparams(pts.points)
-numpoints(pts::ExperimentSetup) = numpoints(pts.points)
+daqpoints(pts::ExperimentSetup) = daqpoints(pts.plan)
+daqpoint(pts::ExperimentSetup, i) = daqpoint(pts.plan, i)
+parameters(pts::ExperimentSetup) = parameters(pts.plan)
+numparams(pts::ExperimentSetup) = numparams(pts.plan)
+numpoints(pts::ExperimentSetup) = numpoints(pts.plan)
 
 axesnames(pts::ExperimentSetup) = axesnames(pts.plan)
 numaxes(pts::ExperimentSetup) = numaxes(pts.plan)
@@ -136,3 +136,4 @@ inputdevice(pts::ExperimentSetup) = pts.idev
 outputdevice(pts::ExperimentSetup) = pts.plan
 
 
+daqplan(setup::ExperimentSetup) = pts.plan
