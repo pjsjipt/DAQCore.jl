@@ -2,7 +2,7 @@
 # Setup experimental points
 
 export ExperimentSetup
-export inputdevice, outputdevice
+export inputdevice
 
 """
 `ExperimentSetup(idev, pts, odev)`

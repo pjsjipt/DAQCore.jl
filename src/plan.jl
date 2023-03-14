@@ -2,6 +2,7 @@
 #
 export AbstractDaqPlan, DaqPlan, startplan!
 export lastpoint, incpoint!, setpoint!, movenext!, finishedpoints
+export outputdevice
 
 
 abstract type AbstractDaqPlan end
@@ -33,7 +34,7 @@ function DaqPlan(devname::AbstractString, devtype::AbstractString,
     axes = axesnames(dev)
     np = numpoints(points)
     pts = daqpoints(points)
-    params = parameter(points)
+    params = parameters(points)
 
     # In this case we will assume that the axes names is the same as
     # parameters.
@@ -54,12 +55,15 @@ function DaqPlan(devname::AbstractString, devtype::AbstractString,
     end
 
     avals = pts[:,idx]
-    return DaqPlan(devname, devtype, 0, dev, points, axes, avals)
+    return DaqPlan(devname, devtype, 0, false, dev, points, axes, avals)
 end
 
 DaqPlan(dev::AbstractOutputDev, points::AbstractDaqPoints) =
     DaqPlan(devname(dev), devtype(dev), dev, points)
 
+devname(dev::DaqPlan) = dev.devname
+devtype(dev::DaqPlan) = dev.devtype
+outputdevice(dev::DaqPlan) = dev.dev
 
 parameters(dev::DaqPlan) = parameters(dev.points)
 numparams(dev::DaqPlan) = numparams(dev.points)
