@@ -2,7 +2,7 @@
 #
 export AbstractDaqPlan, DaqPlan, startplan!
 export lastpoint, incpoint!, setpoint!, movenext!, finishedpoints
-export outputdevice
+export outputdevice, axesvals, planpoints
 
 
 abstract type AbstractDaqPlan end
@@ -61,31 +61,33 @@ end
 DaqPlan(dev::AbstractOutputDev, points::AbstractDaqPoints) =
     DaqPlan(devname(dev), devtype(dev), dev, points)
 
-devname(dev::DaqPlan) = dev.devname
+devname(dev::AbstractDaqPlan) = dev.devname
 devtype(dev::DaqPlan) = dev.devtype
-outputdevice(dev::DaqPlan) = dev.dev
+outputdevice(dev::AbstractDaqPlan) = dev.dev
 
-parameters(dev::DaqPlan) = parameters(dev.points)
-numparams(dev::DaqPlan) = numparams(dev.points)
-numpoints(dev::DaqPlan) = numpoints(dev.points)
-daqpoints(dev::DaqPlan) = daqpoints(dev.points)
-daqpoint(dev::DaqPlan, i) = daqpoints(dev.points, i)
+parameters(dev::AbstractDaqPlan) = parameters(dev.points)
+numparams(dev::AbstractDaqPlan) = numparams(dev.points)
+numpoints(dev::AbstractDaqPlan) = numpoints(dev.points)
+daqpoints(dev::AbstractDaqPlan) = daqpoints(dev.points)
+daqpoint(dev::AbstractDaqPlan, i) = daqpoints(dev.points, i)
 
-numaxes(dev::DaqPlan) = length(dev.axes)
-axesnames(dev::DaqPlan) = dev.axes
-lastpoint(dev::DaqPlan) = dev.lastpoint
-incpoint!(dev::DaqPlan) = dev.lastpoint += 1
-setpoint!(dev::DaqPlan, i) = dev.lastpoint = i-1
+numaxes(dev::AbstractDaqPlan) = length(dev.axes)
+axesnames(dev::AbstractDaqPlan) = dev.axes
+lastpoint(dev::AbstractDaqPlan) = dev.lastpoint
+incpoint!(dev::AbstractDaqPlan) = dev.lastpoint += 1
+setpoint!(dev::AbstractDaqPlan, i) = dev.lastpoint = i-1
 
-finishedpoints(dev::DaqPlan) = dev.lastpoint == numpoints(dev)
+finishedpoints(dev::AbstractDaqPlan) = dev.lastpoint == numpoints(dev)
 
+axesvals(dev::AbstractDaqPlan) = dev.avals
+planpoints(dev::AbstractDaqPlan) = dev.points
 
-function startplan!(dev::DaqPlan)
+function startplan!(dev::AbstractDaqPlan)
     dev.lastpoint = 0
     dev.started = false
 end
 
-function moventh!(dev::DaqPlan, i) 
+function moventh!(dev::AbstractDaqPlan, i) 
     if i > numpoints(dev)
         return false
     end
@@ -96,7 +98,7 @@ function moventh!(dev::DaqPlan, i)
 end
 
 
-function movenext!(dev::DaqPlan)
+function movenext!(dev::AbstractDaqPlan)
 
     
     if finishedpoints(dev)
@@ -110,7 +112,7 @@ function movenext!(dev::DaqPlan)
     return true
 end
 
-function movefirst!(dev::DaqPlan)
+function movefirst!(dev::AbstractDaqPlan)
    
     x = dev.avals[1,:]
     moveto!(dev.dev, x)
