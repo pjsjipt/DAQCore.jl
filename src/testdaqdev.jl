@@ -15,7 +15,7 @@ struct TestSignal{T}
 end
 Base.broadcastable(S::TestSignal) = Ref(S)
 
-function TestSignal(amp=1.0, freq=10.0, phase=0.0, offset=1.0)
+function TestSignal(;amp=1.0, freq=10.0, phase=0.0, offset=1.0)
     TestSignal(amp, freq, phase, offset)
 end
 

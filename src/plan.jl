@@ -69,7 +69,7 @@ parameters(dev::AbstractDaqPlan) = parameters(dev.points)
 numparams(dev::AbstractDaqPlan) = numparams(dev.points)
 numpoints(dev::AbstractDaqPlan) = numpoints(dev.points)
 daqpoints(dev::AbstractDaqPlan) = daqpoints(dev.points)
-daqpoint(dev::AbstractDaqPlan, i) = daqpoints(dev.points, i)
+daqpoint(dev::AbstractDaqPlan, i) = daqpoint(dev.points, i)
 
 numaxes(dev::AbstractDaqPlan) = length(dev.axes)
 axesnames(dev::AbstractDaqPlan) = dev.axes
