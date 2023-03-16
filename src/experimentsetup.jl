@@ -58,11 +58,14 @@ julia> while movenext!(setup)
 [300.0]
 ```
 """
-mutable struct ExperimentSetup{Plan<:AbstractDaqPlan,IDev<:AbstractInputDev,Filter} <: AbstractExperimentSetup
+mutable struct ExperimentSetup{Plan<:AbstractDaqPlan,IDev<:AbstractInputDev,
+                               Filter,Config} <: AbstractExperimentSetup
     "Data Input Devices"
     idev::IDev
     "Experiment Plan"
     plan::Plan
+    "Experiment configuration"
+    config::Config
     "Data Filtering and processing"
     filt::Filter
 end
@@ -74,9 +77,10 @@ end
 
 
 function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
-                         odev::AbstractOutputDev)
+                         odev::AbstractOutputDev, config=nothing,
+                         filt=nothing)
     
-    return ExperimentSetup(idev, DaqPlan(dev, pts), nothing)
+    return ExperimentSetup(idev, DaqPlan(dev, pts), config, filt)
 end
 
 
