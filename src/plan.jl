@@ -144,7 +144,7 @@ function movenext!(dev::DaqPlan{OutputDevSet})
     end
     
     lp = lastpoint(dev)
-    x_next = dev.xvals[lp+1,:]
+    x_next = dev.avals[lp+1,:]
     
     if !dev.started # First point, move avery sub-device
         for kdev in dev.dev
