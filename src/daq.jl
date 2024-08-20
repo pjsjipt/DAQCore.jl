@@ -16,8 +16,8 @@ This is mostly used for loading configurations that do not have
 any specific IO methods.
 """
 struct InputDev{Chans,Conf} <: AbstractInputDev
-    devname::String
-    devtype::String
+    devname::Symbol
+    devtype::Symbol
     chans::Chans
     config::Conf
 end

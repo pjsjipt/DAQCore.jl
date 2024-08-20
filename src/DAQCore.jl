@@ -21,8 +21,6 @@ abstract type AbstractOutputDev <: AbstractDevice end
 "Base type for device configuration"
 abstract type AbstractDaqConfig end
 
-"Base type for data acquisition task"
-abstract type AbstractDaqTask end
 
 "Abstract type to handle pressure scanners"
 abstract type AbstractPressureScanner <: AbstractInputDev end
@@ -46,7 +44,7 @@ abstract type AbstractDaqFilter end
 """
 `devname(dev::AbstractDevice)`
 
-The device name is a string that is used to refer to a specific device.
+The device name is a symbol that is used to refer to a specific device.
 
 This string is used when saving data and post processing.
 """
@@ -56,26 +54,22 @@ devname(dev::AbstractDevice) = dev.devname
 
 "Returns the type of device"
 function devtype end
-devtype(dev::AbstractDevice) = string(typeof(dev))
+devtype(dev::AbstractDevice) = Symbol(typeof(dev))
 
 
 
 include("utils.jl")
 include("daq.jl")
-include("circbuffer.jl")
 include("config.jl")
 include("channels.jl")
 include("sampling.jl")
 include("measdata.jl")
 include("deviceset.jl")
-include("daqtask.jl")
 include("points.jl")
 include("outputdev.jl")
 include("outputdevset.jl")
 include("plan.jl")
 include("experimentsetup.jl")
-include("testdaqdev.jl")
-include("testoutputdev.jl")
 
 
 "Empty generic function for filter application"
