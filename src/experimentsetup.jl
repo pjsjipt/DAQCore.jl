@@ -80,7 +80,7 @@ function ExperimentSetup(idev::AbstractInputDev, pts::AbstractDaqPoints,
                          odev::AbstractOutputDev, config=nothing,
                          filt=nothing)
     
-    return ExperimentSetup(idev, DaqPlan(dev, pts), config, filt)
+    return ExperimentSetup(idev, DaqPlan(odev, pts), config, filt)
 end
 
 
