@@ -3,14 +3,42 @@ import DataStructures: OrderedDict
 export AbstractDaqChannels, DaqChannels, numchannels, daqchannels, physchans
 export chanslice, daqchan, chanindex
 
+mutable struct DaqChannel{C} <: AbstractChannel
+    "Index of the channel"
+    idx::Int64
+    "Name of the channel"
+    name::Symbol
+    "Description of the channel"
+    descr::String
+    "Unit of the data returned by the channel"
+    unit::String
+    "Physical channel on the device"
+    physchan::C
+end
 
-mutable struct DaqChannels{C} <: AbstractDaqChannels
+"Index of the channel"
+chanidx(ch::DaqChannel) = ch.idx
+
+"Name of the channel"
+channame(ch::DaqChannel) = ch.name
+
+"Description of the channel"
+chandescr(ch::DaqChannel) = ch.descr
+
+"Unit of the data of the channel"
+chanunit(ch::DaqChannel) = ch.unit
+
+"Corresponding physical channel"
+chanphys(ch::DaqChannel) = ch.physchan
+
+
+mutable struct DaqChannelList{C,Ch}
     "Physical designation of the channels"
     physchans::C
     "Names of the channels"
-    channels::Vector{String}
+    channels::Vector{DaqChannel{Ch}}
     "Mapping of channel names to index"
-    chanmap::OrderedDict{String,Int}
+    chanmap::OrderedDict{Symbol,Int64}
 end
 
 # We dont want to broadcast over DaqChannels objects
@@ -113,10 +141,10 @@ channel name (string) to channel index (integer).
 
 If there are repeated channel names, unknown behaviour.
 """
-function chanlist2map(chans::AbstractVector{<:AbstractString}, ::Type{TD}=OrderedDict) where {TD <: AbstractDict}
-    chanmap = TD{String,Int}()
+function chanlist2map(chans::AbstractVector{CH}, ::Type{TD}=OrderedDict) where {CH,TD<:AbstractDict}
+    chanmap = TD{Symbol,Int}()
     for (i,v) in enumerate(chans)
-        chanmap[v] = i
+        chanmap[Symbol(v)] = i
     end
     return chanmap
 end
@@ -125,7 +153,7 @@ end
 
 
 "Return the number of channels of an input device"
-numchannels(ch::DaqChannels) = length(ch.channels)
+nchannels(ch::DaqChannels) = length(ch.channels)
 
 
 "Return channel names of every configure channel"
@@ -135,7 +163,7 @@ daqchannels(ch::DaqChannels) = ch.channels
 physchans(ch::DaqChannels) = ch.physchans
 
 import Base.getindex
-getindex(ch::DaqChannels, s::AbstractString) = ch.chanmap[s]
+getindex(ch::DaqChannels, s) = ch.channels[ch.chanmap[Symbol(s)]]
 getindex(ch::DaqChannels, idx::Integer) = ch.channels[idx]
 
 """

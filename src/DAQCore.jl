@@ -4,13 +4,16 @@ module DAQCore
 import DataStructures: OrderedDict
 
 
-export AbstractDevice, AbstractInputDev, AbstractOutputDev, AbstractPressureScanner
+export AbstractDevice, AbstractIODev, AbstractInputDev, AbstractOutputDev, AbstractPressureScanner
 export AbstractDaqConfig, AbstractDaqTask, AbstractExperiment
 export AbstractExperimentSetup, AbstractDaqFilter
 
 export devname, devtype
 "Abstract type to handle any kind of device"
 abstract type AbstractDevice end
+
+"Abstract type to handle IO devices"
+abstract type AbstractIODev <: AbstractDevice end
 
 "Abstract type to handle data acquisition (input) devices"
 abstract type AbstractInputDev <: AbstractDevice end
